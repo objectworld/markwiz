@@ -1,0 +1,27 @@
+{
+  "name": "markwiz",
+  "version": "0.0.1",
+  "description": "Typora-style WYSIWYG Markdown editor with Mermaid & PlantUML diagrams, built with Tiptap. Web + Desktop (Tauri).",
+  "private": true,
+  "license": "MIT",
+  "author": "objectworld",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/objectworld/markwiz.git"
+  },
+  "keywords": [
+    "markdown",
+    "wysiwyg-editor",
+    "tiptap",
+    "tauri",
+    "mermaid",
+    "plantuml",
+    "typora",
+    "prosemirror"
+  ],
+  "scripts": {
+    "dev": "echo \"TODO: vite dev server\" && exit 1",
+    "build": "echo \"TODO: vite build\" && exit 1",
+    "tauri": "echo \"TODO: tauri cli\" && exit 1"
+  }
+}
