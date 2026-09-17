@@ -1,5 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import { editorExtensions } from './extensions';
 import '../styles/editor.css';
 
 const initialContent = `
@@ -9,7 +9,7 @@ const initialContent = `
 
 export function Editor() {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: editorExtensions,
     content: initialContent,
     immediatelyRender: false,
   });

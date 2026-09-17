@@ -6,7 +6,7 @@ describe('Editor', () => {
   it('renders the initial content', async () => {
     render(<Editor />);
 
-    expect(await screen.findByRole('heading', { name: 'Markwiz' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Markwiz/ })).toBeInTheDocument();
     expect(screen.getByText('굵게')).toBeInTheDocument();
   });
 });

@@ -10,3 +10,27 @@
   pointer-events: none;
   color: #9ca3af;
 }
+
+.markwiz-raw-marker {
+  color: #9ca3af;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  user-select: none;
+}
+
+.markwiz-raw-marker.markwiz-raw-fence {
+  display: block;
+}
+
+.markwiz-footnote-ref {
+  color: #2563eb;
+  cursor: default;
+}
+
+.markwiz-footnote-def {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  font-size: 0.9em;
+  color: #4b5563;
+}
