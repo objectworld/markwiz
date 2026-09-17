@@ -1,0 +1,33 @@
+{
+  "file.new": { "win": "Ctrl+N", "mac": "Cmd+N" },
+  "file.open": { "win": "Ctrl+O", "mac": "Cmd+O" },
+  "file.save": { "win": "Ctrl+S", "mac": "Cmd+S" },
+  "file.saveAs": { "win": "Ctrl+Shift+S", "mac": "Cmd+Shift+S" },
+
+  "format.bold": { "win": "Ctrl+B", "mac": "Cmd+B" },
+  "format.italic": { "win": "Ctrl+I", "mac": "Cmd+I" },
+  "format.strike": { "win": "Alt+Shift+5", "mac": "Control+Shift+`" },
+  "format.code": { "win": "Ctrl+Shift+`", "mac": "Cmd+Shift+`" },
+  "format.clearFormat": { "win": "Ctrl+\\", "mac": "Cmd+\\" },
+
+  "format.heading1": { "win": "Ctrl+1", "mac": "Cmd+1" },
+  "format.heading2": { "win": "Ctrl+2", "mac": "Cmd+2" },
+  "format.heading3": { "win": "Ctrl+3", "mac": "Cmd+3" },
+  "format.heading4": { "win": "Ctrl+4", "mac": "Cmd+4" },
+  "format.heading5": { "win": "Ctrl+5", "mac": "Cmd+5" },
+  "format.heading6": { "win": "Ctrl+6", "mac": "Cmd+6" },
+  "format.paragraph": { "win": "Ctrl+0", "mac": "Cmd+0" },
+  "format.blockquote": { "win": "Ctrl+Shift+Q", "mac": "Cmd+Alt+Q" },
+  "format.orderedList": { "win": "Ctrl+Shift+[", "mac": "Cmd+Alt+O" },
+  "format.unorderedList": { "win": "Ctrl+Shift+]", "mac": "Cmd+Alt+U" },
+  "format.codeFences": { "win": "Ctrl+Shift+K", "mac": "Cmd+Alt+C" },
+  "format.table": { "win": "Ctrl+T", "mac": "Cmd+Alt+T" },
+  "format.hyperlink": { "win": "Ctrl+K", "mac": "Cmd+K" },
+  "format.image": { "win": "Ctrl+Shift+I", "mac": "Cmd+Control+I" },
+
+  "view.toggleSidebar": { "win": "Ctrl+Shift+L", "mac": "Cmd+Shift+L" },
+  "view.outline": { "win": "Ctrl+Shift+1", "mac": "Cmd+Control+1" },
+  "view.sourceMode": { "win": "Ctrl+/", "mac": "Cmd+/" },
+  "view.focusMode": { "win": "F8", "mac": "F8" },
+  "view.typewriterMode": { "win": "F9", "mac": "F9" }
+}

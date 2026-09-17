@@ -26,6 +26,16 @@ describe('FocusLineDecoration', () => {
     expect(e.view.dom.innerHTML).not.toContain('## ');
   });
 
+  it('updates the prefix immediately when the heading level changes at the same position', () => {
+    const e = createEditor('<h1>Title</h1>');
+    e.commands.setTextSelection(2);
+    expect(e.view.dom.innerHTML).toContain('# ');
+
+    e.commands.toggleHeading({ level: 2 });
+    const marker = e.view.dom.querySelector('.markwiz-raw-marker');
+    expect(marker?.textContent).toBe('## ');
+  });
+
   it('reveals bold delimiters only while the selection overlaps the bold run', () => {
     const e = createEditor('<p>plain <strong>bold text</strong> tail</p>');
 

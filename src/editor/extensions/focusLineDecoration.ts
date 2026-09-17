@@ -47,8 +47,8 @@ function buildDecorations(doc: ProseMirrorNode, selection: Selection): Decoratio
     seenMarkRanges.add(key);
 
     const [open, close] = isLink ? ['[', `](${mark.attrs.href ?? ''})`] : delimiters;
-    decorations.push(Decoration.widget(mFrom, rawMarker(open), { side: -1, key: `${key}-open` }));
-    decorations.push(Decoration.widget(mTo, rawMarker(close), { side: 1, key: `${key}-close` }));
+    decorations.push(Decoration.widget(mFrom, rawMarker(open), { side: -1, key: `${key}-open-${open}` }));
+    decorations.push(Decoration.widget(mTo, rawMarker(close), { side: 1, key: `${key}-close-${close}` }));
   }
 
   doc.nodesBetween(from, to, (node, pos, parent, index) => {
@@ -56,7 +56,9 @@ function buildDecorations(doc: ProseMirrorNode, selection: Selection): Decoratio
 
     if (node.type.name === 'heading') {
       const prefix = `${'#'.repeat(node.attrs.level as number)} `;
-      decorations.push(Decoration.widget(pos + 1, rawMarker(prefix), { side: -1, key: `heading-${pos}` }));
+      // 위젯 key에 내용을 포함시켜야 레벨이 바뀔 때 ProseMirror가 캐시된
+      // DOM을 재사용하지 않고 다시 그린다 (위치가 같으면 기본적으로 재사용됨).
+      decorations.push(Decoration.widget(pos + 1, rawMarker(prefix), { side: -1, key: `heading-${pos}-${prefix}` }));
       return;
     }
 
@@ -65,7 +67,7 @@ function buildDecorations(doc: ProseMirrorNode, selection: Selection): Decoratio
       decorations.push(
         Decoration.widget(pos + 1, rawMarker(`\`\`\`${lang}`, 'markwiz-raw-fence'), {
           side: -1,
-          key: `code-open-${pos}`,
+          key: `code-open-${pos}-${lang}`,
         }),
       );
       decorations.push(
@@ -84,15 +86,14 @@ function buildDecorations(doc: ProseMirrorNode, selection: Selection): Decoratio
 
     if (node.type.name === 'taskItem') {
       const checked = Boolean(node.attrs.checked);
-      decorations.push(
-        Decoration.widget(pos + 1, rawMarker(`- [${checked ? 'x' : ' '}] `), { side: -1, key: `task-${pos}` }),
-      );
+      const marker = `- [${checked ? 'x' : ' '}] `;
+      decorations.push(Decoration.widget(pos + 1, rawMarker(marker), { side: -1, key: `task-${pos}-${checked}` }));
       return;
     }
 
     if (node.type.name === 'listItem' && parentName) {
       const marker = parentName === 'orderedList' ? orderedListMarker(parent!, index) : '- ';
-      decorations.push(Decoration.widget(pos + 1, rawMarker(marker), { side: -1, key: `li-${pos}` }));
+      decorations.push(Decoration.widget(pos + 1, rawMarker(marker), { side: -1, key: `li-${pos}-${marker}` }));
     }
   });
 
