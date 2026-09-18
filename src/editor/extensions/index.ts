@@ -7,6 +7,7 @@ import Heading from '@tiptap/extension-heading';
 import Blockquote from '@tiptap/extension-blockquote';
 import { BulletList, OrderedList } from '@tiptap/extension-list';
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { ReactNodeViewRenderer } from '@tiptap/react';
 import TaskList from '@tiptap/extension-task-list';
 import Image from '@tiptap/extension-image';
 import { TableKit } from '@tiptap/extension-table';
@@ -15,6 +16,7 @@ import { FootnoteReference, FootnoteDefinition } from './footnote';
 import { FocusLineDecoration } from './focusLineDecoration';
 import { CommandKeymap } from './commandKeymap';
 import { lowlight } from './lowlight';
+import { CodeBlockView } from '../nodeviews/CodeBlockView';
 
 // registry.ts + keymap.json이 단축키의 유일한 소스가 되도록, 아래 노드/마크들이
 // 라이브러리 기본으로 갖고 있는 addKeyboardShortcuts()를 모두 비워서
@@ -44,7 +46,9 @@ export const editorExtensions = [
   Blockquote.extend(noOwnShortcuts),
   BulletList.extend(noOwnShortcuts),
   OrderedList.extend(noOwnShortcuts),
-  CodeBlockLowlight.extend(noOwnShortcuts).configure({ lowlight }),
+  CodeBlockLowlight.extend(noOwnShortcuts)
+    .extend({ addNodeView: () => ReactNodeViewRenderer(CodeBlockView) })
+    .configure({ lowlight }),
   TaskList,
   TaskItem,
   // Tiptap Image는 기본이 block 레벨 노드라 문단 안에 들어갈 수 없다.

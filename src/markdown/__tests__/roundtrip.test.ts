@@ -87,6 +87,16 @@ const x = 1;
     );
   });
 
+  it('mermaid code fence (rendered by a custom node view, still plain markdown text)', () => {
+    expectRoundtrip(
+      `
+\`\`\`mermaid
+graph TD; A-->B;
+\`\`\`
+`,
+    );
+  });
+
   it('link and image', () => {
     expectRoundtrip('See [Markwiz](https://example.com) and ![alt text](https://example.com/x.png).');
   });

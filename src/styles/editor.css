@@ -34,3 +34,56 @@
   font-size: 0.9em;
   color: #4b5563;
 }
+
+.markwiz-diagram {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 2rem 0.75rem 0.75rem;
+  margin: 0.75rem 0;
+  background: #fafafa;
+}
+
+.markwiz-diagram-toggle {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.markwiz-diagram-source {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+}
+
+.markwiz-diagram-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.markwiz-diagram-svg svg {
+  max-width: 100%;
+}
+
+.markwiz-diagram-error {
+  color: #b91c1c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  white-space: pre-wrap;
+}
+
+.markwiz-diagram-empty {
+  color: #9ca3af;
+  font-size: 0.85em;
+}
+
+.markwiz-hidden {
+  display: none;
+}
