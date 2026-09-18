@@ -10,7 +10,6 @@ out/
 
 # Tauri
 src-tauri/target/
-src-tauri/Cargo.lock
 
 # Environment
 .env

@@ -4,6 +4,7 @@ import { getShortcutForPlatform, loadKeymap } from '../../commands/keymap';
 import { executeCommand } from '../../commands/registry';
 import { toProseMirrorShortcut } from '../../commands/shortcutFormat';
 import '../../commands/defaultCommands';
+import '../../commands/fileCommands';
 
 // keymap.json(단일 소스)을 커맨드 레지스트리와 연결하는 계층.
 // 포맷 단축키는 여기서 Tiptap addKeyboardShortcuts()에 바인딩하고,

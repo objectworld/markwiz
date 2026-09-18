@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { COMMAND_IDS } from './commandIds';
 import defaultKeymap from './keymap.json';
 import { getShortcutForPlatform, loadKeymap, setKeymapOverrides, type KeymapConfig } from './keymap';
-import { toProseMirrorShortcut } from './shortcutFormat';
+import { toProseMirrorShortcut, toTauriAccelerator } from './shortcutFormat';
 
 const keymap = defaultKeymap as KeymapConfig;
 
@@ -38,6 +38,18 @@ describe('toProseMirrorShortcut', () => {
     expect(toProseMirrorShortcut('F8')).toBe('F8');
     expect(toProseMirrorShortcut('Cmd+Control+1')).toBe('Cmd-Control-1');
     expect(toProseMirrorShortcut('Ctrl+\\')).toBe('Ctrl-\\');
+  });
+});
+
+describe('toTauriAccelerator', () => {
+  it('uppercases single-letter keys and joins with "+"', () => {
+    expect(toTauriAccelerator('Ctrl+b')).toBe('Ctrl+B');
+    expect(toTauriAccelerator('Cmd+Shift+s')).toBe('Cmd+Shift+S');
+  });
+
+  it('normalizes the "Control" alias and preserves multi-modifier combos', () => {
+    expect(toTauriAccelerator('Cmd+Control+1')).toBe('Cmd+Ctrl+1');
+    expect(toTauriAccelerator('F8')).toBe('F8');
   });
 });
 

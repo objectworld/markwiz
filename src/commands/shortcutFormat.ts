@@ -10,3 +10,23 @@ export function toProseMirrorShortcut(combo: string): string {
   const normalizedKey = /^[a-zA-Z]$/.test(key) ? key.toLowerCase() : key;
   return [...parts.slice(0, -1), normalizedKey].join('-');
 }
+
+const TAURI_MODIFIER_ALIASES: Record<string, string> = {
+  ctrl: 'Ctrl',
+  control: 'Ctrl',
+  cmd: 'Cmd',
+  command: 'Cmd',
+  alt: 'Alt',
+  option: 'Alt',
+  shift: 'Shift',
+};
+
+// Tauri 네이티브 메뉴 accelerator 형식("Ctrl+Shift+S")으로 변환한다.
+// ProseMirror DSL과 달리 알파벳 키는 대문자로 쓴다.
+export function toTauriAccelerator(combo: string): string {
+  const parts = combo.split('+').map((part) => part.trim());
+  const key = parts[parts.length - 1];
+  const modifiers = parts.slice(0, -1).map((mod) => TAURI_MODIFIER_ALIASES[mod.toLowerCase()] ?? mod);
+  const normalizedKey = key.length === 1 ? key.toUpperCase() : key;
+  return [...modifiers, normalizedKey].join('+');
+}

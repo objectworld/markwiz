@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { isTauri } from '@tauri-apps/api/core';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { editorExtensions } from './extensions';
 import '../styles/editor.css';
@@ -13,6 +15,11 @@ export function Editor() {
     content: initialContent,
     immediatelyRender: false,
   });
+
+  useEffect(() => {
+    if (!editor || !isTauri()) return;
+    import('../platform/desktop/menu').then((m) => m.installNativeMenu(editor));
+  }, [editor]);
 
   return <EditorContent editor={editor} />;
 }
