@@ -47,7 +47,9 @@ export const editorExtensions = [
   CodeBlockLowlight.extend(noOwnShortcuts).configure({ lowlight }),
   TaskList,
   TaskItem,
-  Image,
+  // Tiptap Image는 기본이 block 레벨 노드라 문단 안에 들어갈 수 없다.
+  // 마크다운의 `텍스트 ![alt](src) 텍스트`처럼 인라인으로 쓰기 위해 명시적으로 켠다.
+  Image.configure({ inline: true }),
   TableKit,
   FootnoteReference,
   FootnoteDefinition,
