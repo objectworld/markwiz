@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import '../commands/viewCommands';
 import { getViewState, resetViewState, setViewState } from '../commands/viewState';
 import { editorExtensions } from '../editor/extensions';
+import { APP_LICENSE, APP_VERSION } from '../appInfo';
+import { AboutDialog } from './AboutDialog';
 import { HelpDialog, prepareReadme } from './HelpDialog';
 import { MenuBar } from './MenuBar';
 
@@ -71,6 +73,25 @@ describe('MenuBar', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: '도움말' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'README 보기' }));
     expect(getViewState().help).toBe(true);
+  });
+});
+
+describe('AboutDialog', () => {
+  it('shows the version and intro from 도움말 > Markwiz 정보 and closes with Escape', async () => {
+    await setup();
+    fireEvent.click(screen.getByRole('menuitem', { name: '도움말' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Markwiz 정보' }));
+    expect(getViewState().about).toBe(true);
+
+    let closed = 0;
+    render(<AboutDialog onClose={() => (closed += 1)} />);
+    const dialog = await screen.findByRole('dialog', { name: 'Markwiz 정보' });
+    expect(dialog).toHaveTextContent(`버전 ${APP_VERSION}`);
+    expect(dialog).toHaveTextContent('WYSIWYG 마크다운 에디터');
+    expect(dialog).toHaveTextContent(APP_LICENSE);
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(closed).toBeGreaterThan(0);
   });
 });
 

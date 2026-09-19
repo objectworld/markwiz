@@ -83,7 +83,11 @@ export function buildMenuModel(keymap: KeymapConfig): MenuGroup[] {
     { text: '보기', entries: entries(viewActions) },
     {
       text: '도움말',
-      entries: [{ kind: 'item', id: 'help.readme', text: 'README 보기', run: () => setViewState({ help: true }) }],
+      entries: [
+        { kind: 'item', id: 'help.readme', text: 'README 보기', run: () => setViewState({ help: true }) },
+        { kind: 'separator' },
+        { kind: 'item', id: 'help.about', text: 'Markwiz 정보', run: () => setViewState({ about: true }) },
+      ],
     },
   ];
 }

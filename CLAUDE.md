@@ -148,6 +148,8 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   서식 항목은 accelerator 없이 단축키 표시만 한다(Tiptap 키맵과 이중 실행 방지).
 - **도움말**: `HelpDialog`가 `README.md?raw`를 읽기 전용 에디터로 보여준다. 사용자 문서와 별개 인스턴스이며
   `commandKeymap`/`focusLineDecoration`을 뺀다(넣으면 Ctrl+S가 README를 저장함). raw HTML 배너는 제거하고 이미지 경로를 번들 URL로 바꾼다
+- **도움말 > Markwiz 정보**(`AboutDialog`): 버전은 `src/appInfo.ts`가 package.json에서 읽고, 소개글·라이선스도 그 파일에 둔다.
+  `appInfo.test.ts`가 package.json / Cargo.toml / tauri.conf.json 버전이 같은지 검사한다
 - 창 제목(파일명)은 `document.title`로는 Tauri 창에 반영되지 않아 `platform/desktop/windowTitle.ts`가 창 API로 설정한다
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 

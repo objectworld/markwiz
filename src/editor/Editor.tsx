@@ -7,6 +7,7 @@ import { executeCommand } from '../commands/registry';
 import { matchesShortcut } from '../commands/shortcutFormat';
 import { useDocumentState } from '../commands/useDocumentState';
 import { getViewState, setViewState, useViewState } from '../commands/viewState';
+import { AboutDialog } from '../menu/AboutDialog';
 import { HelpDialog } from '../menu/HelpDialog';
 import { MenuBar } from '../menu/MenuBar';
 import { Ribbon } from '../ribbon/Ribbon';
@@ -46,7 +47,8 @@ export function Editor() {
   useEffect(() => {
     if (!editor) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || getViewState().help || getViewState().insert) return;
+      const open = getViewState();
+      if (event.defaultPrevented || open.help || open.about || open.insert) return;
       const keymap = loadKeymap();
       const id = APP_COMMAND_IDS.find((candidate) => {
         const entry = keymap[candidate];
@@ -119,6 +121,7 @@ export function Editor() {
       {view.insert && editor && (
         <InsertDialog editor={editor} request={view.insert} onClose={() => setViewState({ insert: null })} />
       )}
+      {view.about && <AboutDialog onClose={() => setViewState({ about: false })} />}
       {view.help && editor && <HelpDialog editor={editor} onClose={() => setViewState({ help: false })} />}
       <StatusBar key={editor ? 'status-ready' : 'status-loading'} editor={editor} />
     </div>

@@ -21,7 +21,7 @@ describe('native menu model', () => {
     expect(names('삽입')).toEqual(insertActions.map((action) => action.label));
     expect(names('다이어그램')).toEqual(diagramActions.map((action) => action.label));
     expect(names('보기')).toEqual(viewActions.map((action) => action.label));
-    expect(names('도움말')).toEqual(['README 보기']);
+    expect(names('도움말')).toEqual(['README 보기', 'Markwiz 정보']);
   });
 
   it('binds native accelerators only for file and view commands', () => {
