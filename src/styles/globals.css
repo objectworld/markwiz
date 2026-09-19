@@ -1,1 +1,12 @@
 @import 'tailwindcss';
+
+/* Claude 앱 팔레트: 따뜻한 아이보리 바탕, 갈색빛 검정 글자, 테라코타 포인트. */
+@theme {
+  --color-chrome: #f0eee6;
+  --color-chrome-hover: #e6e3d8;
+  --color-chrome-border: #ddd9cc;
+  --color-canvas: #faf9f5;
+  --color-ink: #3d3929;
+  --color-ink-muted: #83827d;
+  --color-accent: #c15f3c;
+}
