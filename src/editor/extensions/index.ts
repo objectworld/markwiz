@@ -10,10 +10,13 @@ import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import TaskList from '@tiptap/extension-task-list';
 import Image from '@tiptap/extension-image';
+import { mergeAttributes } from '@tiptap/core';
+import { resolveDisplaySrc } from '../../platform/localFile';
 import { TableKit } from '@tiptap/extension-table';
 import { TaskItem } from './taskItem';
 import { FootnoteReference, FootnoteDefinition } from './footnote';
 import { FocusLineDecoration } from './focusLineDecoration';
+import { CurrentBlock } from './currentBlock';
 import { CommandKeymap } from './commandKeymap';
 import { lowlight } from './lowlight';
 import { CodeBlockView } from '../nodeviews/CodeBlockView';
@@ -36,7 +39,7 @@ export const editorExtensions = [
     blockquote: false,
     bulletList: false,
     orderedList: false,
-    link: { markdownLinks: true },
+    link: { markdownLinks: true, protocols: ['file'] },
   }),
   Heading.extend(noOwnShortcuts).configure({ levels: [1, 2, 3, 4, 5, 6] }),
   Bold.extend(noOwnShortcuts),
@@ -53,10 +56,19 @@ export const editorExtensions = [
   TaskItem,
   // Tiptap Image는 기본이 block 레벨 노드라 문단 안에 들어갈 수 없다.
   // 마크다운의 `텍스트 ![alt](src) 텍스트`처럼 인라인으로 쓰기 위해 명시적으로 켠다.
-  Image.configure({ inline: true }),
+  // 화면에 그릴 때만 file:// 주소를 웹뷰가 읽을 수 있는 주소로 바꾸고, 문서(직렬화)에는 원래 값이 남는다.
+  Image.extend({
+    renderHTML({ HTMLAttributes }) {
+      return [
+        'img',
+        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { src: resolveDisplaySrc(HTMLAttributes.src) }),
+      ];
+    },
+  }).configure({ inline: true }),
   TableKit,
   FootnoteReference,
   FootnoteDefinition,
   FocusLineDecoration,
+  CurrentBlock,
   CommandKeymap,
 ];

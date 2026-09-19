@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/core';
 import {
   Bold,
   Code,
+  Focus,
   FileCode,
   FilePlus,
   FolderOpen,
@@ -10,6 +11,7 @@ import {
   Link,
   List,
   ListChecks,
+  ListTree,
   ListOrdered,
   Minus,
   Quote,
@@ -19,6 +21,7 @@ import {
   SaveAll,
   Strikethrough,
   Superscript,
+  Type,
   Table,
   Undo2,
   Waypoints,
@@ -27,6 +30,7 @@ import {
 } from 'lucide-react';
 import type { CommandId } from '../commands/commandIds';
 import { executeCommand } from '../commands/registry';
+import { getViewState } from '../commands/viewState';
 
 export interface RibbonAction {
   id: string;
@@ -134,6 +138,14 @@ export const insertActions: RibbonAction[] = [
 export const diagramActions: RibbonAction[] = [
   { id: 'insert.mermaid', label: 'Mermaid', icon: Workflow, run: (editor) => insertDiagram(editor, 'mermaid') },
   { id: 'insert.plantuml', label: 'PlantUML', icon: Waypoints, run: (editor) => insertDiagram(editor, 'plantuml') },
+];
+
+// 보기 그룹의 토글 상태는 에디터가 아니라 viewState가 소유한다.
+export const viewActions: RibbonAction[] = [
+  { ...fromCommand('view.toggleSidebar', '사이드바', ListTree), isActive: () => getViewState().sidebar },
+  { ...fromCommand('view.sourceMode', '소스 코드 모드', FileCode), isActive: () => getViewState().sourceMode },
+  { ...fromCommand('view.focusMode', '포커스 모드', Focus), isActive: () => getViewState().focusMode },
+  { ...fromCommand('view.typewriterMode', '타자기 모드', Type), isActive: () => getViewState().typewriterMode },
 ];
 
 export const STYLE_OPTIONS = [

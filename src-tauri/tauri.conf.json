@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Markwiz",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "identifier": "com.objectworld.markwiz",
   "build": {
     "frontendDist": "../dist",
@@ -20,7 +20,8 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self'"
+      "assetProtocol": { "enable": true, "scope": ["**"] },
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: http: https: blob: asset: http://asset.localhost; connect-src 'self'"
     }
   },
   "bundle": {

@@ -136,11 +136,25 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - 서버 동기화(SaaS 계정/클라우드 저장) — 추후 별도 단계
 - 모바일 앱
 - 코드 서명 — 보류(아래 "빌드 / 배포" 참고)
-- 미구현 커맨드: `view.*`(사이드바/아웃라인/소스 모드/포커스/타자기 모드)는 keymap에만 있고 핸들러가 없다
-  (호출하면 "구현되지 않음" 경고만 남김). `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드도 미연결
+- `view.*`는 `src/commands/viewCommands.ts`가 등록하고 상태는 `viewState.ts`가 소유한다. 사이드바는 개요 패널뿐이고
+  (`toggleSidebar`/`outline`이 같은 패널을 토글), 소스 모드는 textarea 편집 후 끌 때 파싱해 반영한다.
+  에디터에 포커스가 없어도 view 단축키가 먹도록 `Editor.tsx`에 window keydown 리스너가 있다(`defaultPrevented`면 건너뜀).
+- **메뉴**: 리본과 같은 그룹/항목(파일 / 편집 / 글꼴 / 단락 / 삽입 / 다이어그램 / 보기) + 끝에 **도움말**(README 보기).
+  `src/menu/menuModel.ts`가 `ribbonActions.ts`에서 모델을 만들고(리본에 항목을 추가하면 메뉴에도 자동 반영),
+  Windows/Linux 데스크탑은 앱 안 `MenuBar`(툴바와 같은 `chrome` 색)로, macOS는 네이티브 메뉴(`platform/desktop/menu.ts`)로 그린다.
+  Windows 네이티브 메뉴 바는 OS가 흰색으로 그려 색을 바꿀 수 없어서 앱 안 메뉴 바로 바꿨다(Alt+문자 니모닉은 없음).
+  웹에는 메뉴 바가 없다(리본만) — 그래서 웹에서는 도움말에 접근할 수 없다.
+  앱 안 메뉴 바/웹에서는 파일·보기 단축키를 `Editor.tsx`의 window keydown 리스너가 처리한다(에디터가 처리한 키는 건너뜀).
+  서식 항목은 accelerator 없이 단축키 표시만 한다(Tiptap 키맵과 이중 실행 방지).
+- **도움말**: `HelpDialog`가 `README.md?raw`를 읽기 전용 에디터로 보여준다. 사용자 문서와 별개 인스턴스이며
+  `commandKeymap`/`focusLineDecoration`을 뺀다(넣으면 Ctrl+S가 README를 저장함). raw HTML 배너는 제거하고 이미지 경로를 번들 URL로 바꾼다
+- 창 제목(파일명)은 `document.title`로는 Tauri 창에 반영되지 않아 `platform/desktop/windowTitle.ts`가 창 API로 설정한다
+- 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(77개), `pnpm test`
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(117개), `pnpm test`
+- 현재 버전 **0.1.0**(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
+  함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)
 
 ## 구현 결정 (코드만 봐서는 알기 어려운 것)
@@ -165,7 +179,13 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - Tiptap `Image`는 기본이 block 노드라 `inline: true`로 설정(문단 안에서 텍스트와 섞이려면 필요)
 - 에디터가 `null`에서 생성되는 시점에 `useEditorState` 초기 스냅샷이 갱신되지 않으므로 `Ribbon`/`StatusBar`에
   서로 다른 `key`를 줘서 재마운트한다(같은 key를 쓰면 형제 요소가 중복 렌더링됨)
-- `window.prompt`(링크/그림 URL 입력)는 Tauri 웹뷰에서 동작하는지 미확인 — 안 뜨면 입력 대화상자를 별도로 구현
+- **링크/이미지 삽입**은 `window.prompt`가 아니라 `InsertDialog`(주소 입력 + 파일 선택)다. `format.hyperlink`/`format.image` 커맨드는
+  `viewState.insert`만 채워 창을 연다. 파일 선택은 `PlatformAPI.pickLocalFile`(데스크탑: dialog 플러그인 → `file:///` URL,
+  웹: 이미지만 data URL·1MB 제한). 로컬 파일은 마크다운에 `file:///C:/…`(경로 인코딩)로 저장한다 — 이를 위해
+  ① markdown-it `validateLink`에 `file:` 추가(안 하면 재열기 시 링크/이미지가 깨짐), ② Tiptap Link `protocols: ['file']`,
+  ③ 이미지 `renderHTML`이 `file://`을 `convertFileSrc`(asset 프로토콜)로 바꿔 그린다(문서 값은 그대로).
+  asset 프로토콜은 `tauri` 크레이트의 `protocol-asset` feature + `tauri.conf.json`의 `assetProtocol`(scope `**`, fs scope와 동일 수준) +
+  CSP `img-src`의 `asset: http://asset.localhost`가 모두 있어야 동작한다. 외부 `http:` 이미지도 보이도록 `img-src`에 `http:`를 허용했다
 
 ## 빌드 / 배포
 - 개발 `pnpm dev`, 웹 빌드 `pnpm build`, 데스크탑 `pnpm tauri build` (Tauri v2, Rust + MSVC Build Tools 필요 — 설치됨)

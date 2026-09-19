@@ -1,36 +1,304 @@
+<p align="center">
+  <img src="docs/images/banner.png" alt="Markwiz" width="100%">
+</p>
+
 # Markwiz
 
-Typora 스타일의 WYSIWYG 마크다운 에디터. Tiptap(ProseMirror) 기반으로,
+Typora 스타일의 WYSIWYG 마크다운 에디터. Tiptap(ProseMirror) 기반이며,
 Mermaid와 PlantUML 다이어그램을 서버 없이 클라이언트 사이드에서 렌더링합니다.
-웹과 데스크탑(Tauri) 양쪽에서 동일한 코드베이스로 동작합니다.
+웹 브라우저와 데스크탑(Tauri) 양쪽에서 동일한 코드베이스로 동작합니다.
 
-## Features
+**현재 버전: 0.1.0** (2026-09-20) — 첫 릴리즈입니다. 변경 내용은 [릴리즈 노트](#릴리즈-노트)를 참고하세요.
 
-- 📝 실시간 WYSIWYG 마크다운 편집 — 마크다운 문법을 즉시 서식으로 변환
-- 📊 Mermaid / PlantUML 다이어그램 코드블록 지원 (서버 불필요, 완전 클라이언트 사이드)
-- ⌨️ Typora와 동일한 단축키 지원
-- 🖥️ 웹 브라우저 + 데스크탑 앱(Windows/macOS/Linux) 동시 지원
-- 🔓 100% 오픈소스 (MIT License)
+![Markwiz 스크린샷](docs/images/screenshot.png)
 
-## Tech Stack
+## 주요 기능
 
-- **Editor Engine**: [Tiptap](https://tiptap.dev) (ProseMirror)
-- **UI**: React + TypeScript + Tailwind CSS
-- **Desktop**: [Tauri](https://tauri.app)
-- **Diagrams**: [Mermaid](https://mermaid.js.org), [plantuml.js](https://github.com/plantuml/plantuml.js) (TeaVM)
+- **실시간 WYSIWYG 편집** — 마크다운 문법(`# `, `**굵게**`, `- `, `> `, ` ``` `, `[]()` 등)을 입력하는 즉시 서식으로 변환하고,
+  커서가 있는 줄에서만 원본 문법을 보여줍니다(Typora 방식).
+- **다이어그램** — ` ```mermaid `, ` ```plantuml ` 코드블록을 그림으로 렌더링. 백엔드 서버가 필요 없습니다.
+- **Typora 동일 단축키** — Windows/Linux, macOS를 각각 정확히 매핑한 `keymap.json`을 직접 수정해 재매핑할 수 있습니다.
+- **Word 스타일 리본 툴바 + 상태바** — 서식·삽입 버튼, 단어/글자 수, 현재 블록 종류 표시.
+- **무손실 왕복 변환** — 마크다운을 열어 저장해도 원본과 동일하게 유지됩니다(round-trip 테스트로 검증).
+- **웹 + 데스크탑** — 파일 열기/저장만 플랫폼별로 다르고(웹: 파일 선택/다운로드, 데스크탑: 실제 파일 시스템) UI는 100% 공유합니다.
 
-## Status
+지원 문법: 헤딩(H1–H6), 굵게/기울임/취소선/인라인 코드, 인용, 순서/비순서 리스트, 체크박스, 코드블록(구문 강조),
+표(GFM), 링크, 이미지, 수평선, 각주.
 
-🚧 초기 개발 단계입니다. 로드맵은 [Issues](../../issues)를 참고해 주세요.
+## 설치
 
-## Getting Started
+### 1. 필요한 소프트웨어
 
-```bash
-pnpm install
-pnpm dev        # 웹 개발 서버
-pnpm tauri dev  # 데스크탑 앱 개발 모드
+웹 버전만 실행할 때는 **Node.js**와 **pnpm**만 있으면 됩니다. 데스크탑 앱을 빌드하려면 Rust 툴체인과 플랫폼별 도구가 추가로 필요합니다.
+
+| 소프트웨어 | 용도 | 비고 |
+|---|---|---|
+| [Node.js](https://nodejs.org) 22 LTS 이상 | 개발 서버, 빌드 | 개발 환경은 v22.19 |
+| [pnpm](https://pnpm.io) | 패키지 매니저 | 프로젝트 고정 |
+| [Rust](https://rustup.rs) 1.77.2 이상 | 데스크탑 앱 빌드 | `rustup`으로 설치 |
+| C++ 빌드 도구 | 데스크탑 앱 빌드 | Windows: Visual Studio Build Tools |
+| WebView2 런타임 | 데스크탑 앱 실행 | Windows 11은 기본 포함 |
+
+#### Windows (PowerShell)
+
+```powershell
+# Node.js LTS, pnpm
+winget install OpenJS.NodeJS.LTS
+npm install -g pnpm
+
+# 데스크탑 앱을 빌드할 때만 필요: Rust + C++ 빌드 도구
+winget install Rustlang.Rustup
+winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
 ```
 
-## License
+설치 후 새 터미널을 열어 `node -v`, `pnpm -v`, `rustc --version`이 모두 출력되는지 확인하세요.
+Build Tools는 용량이 커서(수 GB) 시간이 오래 걸립니다.
 
-MIT © [objectworld](https://github.com/objectworld)
+#### macOS / Linux
+
+Tauri 공식 문서의 [사전 요구 사항](https://v2.tauri.app/start/prerequisites/)을 따르세요
+(macOS는 Xcode Command Line Tools, Linux는 `webkit2gtk` 등 시스템 라이브러리).
+현재 개발과 검증은 **Windows에서만** 이루어졌고 macOS/Linux 빌드는 아직 확인하지 못했습니다.
+
+### 2. 소스 받기와 의존성 설치
+
+```bash
+git clone https://github.com/objectworld/markwiz.git
+cd markwiz
+pnpm install
+```
+
+## 실행과 빌드
+
+### 개발 모드
+
+```bash
+pnpm dev          # 웹 개발 서버 — http://localhost:5173
+pnpm tauri dev    # 데스크탑 앱 개발 모드 (Rust 필요)
+```
+
+### 웹 빌드
+
+```bash
+pnpm build        # 결과물: dist/ (정적 파일)
+pnpm preview      # 빌드 결과를 로컬에서 확인 — http://localhost:4173
+```
+
+`dist/`는 정적 호스팅(Nginx, GitHub Pages 등)에 그대로 올릴 수 있습니다. 빌드된 `index.html`에는 PlantUML(WebAssembly)이
+동작하도록 `'wasm-unsafe-eval'`을 허용하는 CSP `<meta>`가 들어 있습니다. 별도의 CSP 헤더를 설정하는 서버라면 같은
+정책(`csp.ts` 참고)을 허용해야 합니다.
+
+### 데스크탑 앱 빌드 (Windows)
+
+```bash
+pnpm tauri build
+```
+
+산출물은 `src-tauri/target/release/` 아래에 생성됩니다.
+
+| 파일 | 설명 |
+|---|---|
+| `bundle/nsis/Markwiz_0.1.0_x64-setup.exe` | 설치 프로그램(권장, WebView2가 없으면 자동 설치) |
+| `bundle/msi/Markwiz_0.1.0_x64_en-US.msi` | MSI 설치 패키지 |
+| `markwiz.exe` | 설치 없이 실행하는 단독 실행 파일 |
+
+- 설치 프로그램 없이 exe만 복사해 실행하려면 대상 PC에 **WebView2 런타임**이 있어야 합니다.
+- 이 앱은 코드 서명이 되어 있지 않아 처음 실행할 때 Windows SmartScreen 경고가 뜰 수 있습니다("추가 정보 → 실행").
+- 빌드하려는 위치의 `markwiz.exe`가 실행 중이면 덮어쓰기에 실패합니다. 앱을 종료한 뒤 빌드하세요.
+- 설치 프로그램 없이 컴파일만 확인하려면 `pnpm tauri build --no-bundle`을 사용합니다.
+
+### 테스트
+
+```bash
+pnpm test         # Vitest 전체 실행
+pnpm test:watch   # 감시 모드
+```
+
+### 아이콘 교체
+
+원본은 `docs/images/logo.svg`(벡터)와 `logo.png`(1024px)입니다. 다른 이미지로 바꾸려면 1024×1024 PNG를 준비해 실행합니다.
+
+```bash
+pnpm tauri icon path/to/icon.png
+```
+
+`src-tauri/icons/`의 `.ico`, `.icns`와 각 크기 PNG가 새로 만들어집니다. 모바일용 `android/`, `ios/` 폴더도 함께 생기는데
+이 프로젝트는 모바일을 지원하지 않으므로 삭제해도 됩니다. 웹 파비콘은 `public/favicon.svg`입니다.
+
+## 사용 방법
+
+### 화면 구성
+
+| 영역 | 설명 |
+|---|---|
+| 창 제목 | 현재 문서 이름 (`문서.md - Markwiz`) |
+| 메뉴 바 (데스크탑) | 파일 / 편집 / 글꼴 / 단락 / 삽입 / 다이어그램 / 보기 / 도움말. 툴바와 같은 항목이며 단축키가 함께 표시됩니다 |
+| 툴바 | 파일 / 편집(실행 취소·다시 실행) / 글꼴 / 단락 / 삽입 / 다이어그램 / 보기 그룹. 버튼에 마우스를 올리면 이름과 단축키가 보입니다 |
+| 사이드바 | 문서 개요(제목 목록). 기본으로 열려 있고 `Ctrl+Shift+L`로 여닫습니다 |
+| 문서 영역 | 아이보리색 작업 영역 위의 흰 종이 한 장. 빈 곳을 눌러도 편집을 시작할 수 있습니다 |
+| 상태바 | 문서 이름, 단어 수, 글자 수(공백 제외), 선택한 글자 수, 커서가 있는 블록 종류 |
+
+- **글꼴 그룹**: 스타일 드롭다운(본문, 제목 1~6), 굵게, 기울임, 취소선, 인라인 코드, 서식 지우기
+- **삽입 그룹**: 표, 그림, 링크, 코드 블록, 구분선, 각주
+- 커서 위치에 적용된 서식은 버튼이 강조되어 표시됩니다.
+
+### 마크다운으로 바로 입력하기
+
+아래처럼 입력하면 즉시 서식으로 바뀝니다. 커서가 있는 줄에서는 원본 문법(`#`, `**` 등)이 흐리게 함께 표시됩니다.
+
+| 입력 | 결과 |
+|---|---|
+| `# ` ~ `###### ` + 공백 | 제목 1~6 |
+| `**굵게**` | **굵게** |
+| `*기울임*` 또는 `_기울임_` | *기울임* |
+| `~~취소선~~` | ~~취소선~~ |
+| `` `코드` `` | 인라인 코드 |
+| `> ` + 공백 | 인용 |
+| `- `, `* `, `+ ` + 공백 | 글머리 기호 목록 |
+| `1. ` + 공백 | 번호 목록 |
+| `[ ] `, `[x] ` (줄 처음) | 체크박스 |
+| ` ```언어 ` + 공백 (예: ` ```js `) | 코드블록(구문 강조) |
+| `---` | 구분선 |
+| `[텍스트](주소)` | 링크 |
+| `![설명](주소)` | 이미지 |
+
+### 링크와 이미지 삽입
+
+툴바 **삽입** 그룹의 링크/그림 버튼(또는 `Ctrl+K`, `Ctrl+Shift+I`)을 누르면 삽입 창이 열립니다.
+
+- **인터넷 주소**: `https://example.com`을 입력합니다. `example.com`처럼 `https://`를 빼도 자동으로 붙습니다.
+- **내 컴퓨터의 파일** (데스크탑 앱): **파일 선택…** 버튼으로 파일을 고르거나 `C:\Users\me\a.png` 같은 경로를 직접 입력합니다.
+  문서에는 `file:///C:/Users/me/a.png` 형태로 저장되고, 이미지는 화면에도 바로 표시됩니다.
+  링크는 글자를 선택한 채로 열면 그 글자에 걸리고, 선택이 없으면 **표시할 텍스트**를 입력받습니다.
+- 링크 주소를 비우고 확인하면 링크가 제거됩니다.
+- 웹 버전에서는 이미지 파일(1MB 이하)만 고를 수 있고 문서 안에 데이터로 포함됩니다. 링크에 로컬 파일을 걸 수는 없습니다.
+
+표와 각주는 툴바의 **삽입** 버튼(또는 표 `Ctrl+T`)으로 만듭니다. 이미 `|` 표나 `[^1]` 각주가 들어 있는 마크다운 파일을
+열면 그대로 표와 각주로 읽힙니다.
+
+### 파일 열기와 저장
+
+| 동작 | 단축키 (Windows/Linux) | 설명 |
+|---|---|---|
+| 새로 만들기 | `Ctrl+N` | 빈 문서 |
+| 열기 | `Ctrl+O` | `.md` / `.markdown` 파일 |
+| 저장 | `Ctrl+S` | 열린 파일이 있으면 덮어쓰기, 없으면 "다른 이름으로 저장" |
+| 다른 이름으로 저장 | `Ctrl+Shift+S` | |
+
+- **데스크탑 앱**: 운영체제의 파일 열기/저장 대화상자를 사용하고 실제 파일에 저장합니다. 상단 메뉴(파일 등)에서도 같은 동작을 쓸 수 있습니다.
+- **웹 브라우저**: 열기는 파일 선택 창, 저장은 브라우저 다운로드로 처리됩니다(브라우저는 로컬 파일을 직접 덮어쓸 수 없습니다).
+
+### 다이어그램
+
+코드블록의 언어를 `mermaid` 또는 `plantuml`로 지정하면 그림으로 렌더링됩니다.
+툴바 **다이어그램** 그룹의 버튼으로 예제가 들어 있는 블록을 바로 삽입할 수도 있습니다.
+
+````markdown
+```mermaid
+graph LR
+  A[마크다운] --> B[Markwiz]
+```
+
+```plantuml
+Alice -> Bob : 안녕하세요
+```
+````
+
+- 블록 오른쪽 위의 **코드 보기 / 미리보기** 버튼으로 원본 코드와 그림을 전환합니다. 새로 만든 빈 블록은 코드 모드로 시작합니다.
+- 코드를 고치면 약 0.4초 뒤에 자동으로 다시 그립니다. 문법 오류가 있어도 원본 코드는 항상 편집할 수 있습니다.
+- PlantUML은 용량이 커서(약 5MB) 문서에 PlantUML 블록이 **처음 나타날 때** 별도 스레드에서 불러옵니다. 첫 렌더링은 몇 초 걸릴 수 있고
+  이후에는 빠릅니다. `@startuml`/`@enduml`은 생략해도 됩니다.
+
+### 주요 단축키
+
+macOS는 `Ctrl`을 `Cmd`로 바꿔 쓰는 것이 기본이지만 일부(★)는 조합 자체가 다릅니다.
+전체 목록은 [`src/commands/keymap.json`](src/commands/keymap.json)에 있습니다.
+
+| 동작 | Windows / Linux | macOS |
+|---|---|---|
+| 굵게 / 기울임 | `Ctrl+B` / `Ctrl+I` | `Cmd+B` / `Cmd+I` |
+| 취소선 ★ | `Alt+Shift+5` | `` Control+Shift+` `` |
+| 인라인 코드 | `` Ctrl+Shift+` `` | `` Cmd+Shift+` `` |
+| 서식 지우기 | `Ctrl+\` | `Cmd+\` |
+| 제목 1~6 / 본문 | `Ctrl+1`~`6` / `Ctrl+0` | `Cmd+1`~`6` / `Cmd+0` |
+| 인용 ★ | `Ctrl+Shift+Q` | `Cmd+Alt+Q` |
+| 번호 목록 ★ | `Ctrl+Shift+[` | `Cmd+Alt+O` |
+| 글머리 목록 ★ | `Ctrl+Shift+]` | `Cmd+Alt+U` |
+| 코드 블록 ★ | `Ctrl+Shift+K` | `Cmd+Alt+C` |
+| 표 삽입 ★ | `Ctrl+T` | `Cmd+Alt+T` |
+| 링크 | `Ctrl+K` | `Cmd+K` |
+| 이미지 ★ | `Ctrl+Shift+I` | `Cmd+Control+I` |
+
+### 단축키 바꾸기
+
+1. **소스에서 바꾸기** — `src/commands/keymap.json`에서 원하는 커맨드의 `win`/`mac` 값을 수정하고 다시 빌드합니다.
+2. **웹에서 즉시 바꾸기** — 브라우저 개발자 도구 콘솔에서 재정의할 항목만 저장한 뒤 새로고침합니다.
+
+   ```js
+   localStorage.setItem('markwiz:keymap-overrides', JSON.stringify({
+     'format.bold': { win: 'Ctrl+Shift+B', mac: 'Cmd+Shift+B' },
+   }));
+   ```
+
+   저장된 재정의를 없애려면 `localStorage.removeItem('markwiz:keymap-overrides')`를 실행합니다. 설정 화면은 아직 없습니다.
+
+## 알려진 한계
+
+- 사이드바에는 문서 개요(제목 목록)만 있고, 파일 트리는 없습니다. `Toggle Sidebar`와 `Outline`은 같은 패널을 여닫습니다.
+- 소스 코드 모드 중에는 툴바의 서식 버튼이 화면에 보이지 않는 에디터에 적용되므로, 서식은 소스 모드를 끈 뒤에 사용하세요.
+- 로컬 파일은 절대 경로(`file:///…`)로 저장되므로, 다른 컴퓨터로 문서를 옮기면 그 파일 링크/이미지는 열리지 않습니다. 상대 경로 이미지(`![](img/a.png)`)는 화면에 표시되지 않습니다.
+- 데스크탑 앱에서 편집 화면의 링크를 눌러 외부 브라우저/기본 프로그램으로 여는지는 확인하지 못했습니다.
+- 웹 버전에는 메뉴 바가 없어(툴바만 있음) 도움말(README 보기)을 열 수 없습니다.
+- PlantUML의 `!theme`, 표준 라이브러리 포함(`!include <...>`), 다크 모드는 지원하지 않습니다.
+- 표 안에서 GFM으로 표현할 수 없는 병합 셀(colspan/rowspan)은 저장 시 보존되지 않습니다.
+- 라이트 테마만 지원합니다.
+
+## 릴리즈 노트
+
+### 0.1.0 (2026-09-20)
+
+첫 릴리즈입니다.
+
+- **편집**: 마크다운 문법을 입력하는 즉시 서식으로 변환, 커서가 있는 줄에서만 원본 문법 표시, 헤딩·굵게·기울임·취소선·인용·목록·체크박스·코드블록(구문 강조)·표·링크·이미지·구분선·각주
+- **다이어그램**: Mermaid, PlantUML을 서버 없이 렌더링(PlantUML은 처음 쓸 때만 로드, Web Worker에서 실행)
+- **파일**: 데스크탑에서 `.md` 열기/저장/다른 이름으로 저장, 웹에서는 파일 선택/다운로드. 저장 후 다시 열어도 내용이 그대로 유지되는 왕복 변환
+- **단축키**: Typora 단축키 전체 매핑, `keymap.json`으로 재매핑
+- **화면**: Word 스타일 툴바와 상태바, 데스크탑 메뉴 바, 문서 개요 사이드바
+- **보기 모드**: 소스 코드 모드, 포커스 모드, 타자기 모드
+- **링크/이미지 삽입 창**: 인터넷 주소 입력 또는 내 컴퓨터의 파일 선택
+- **도움말**: 메뉴의 도움말에서 이 README를 앱 안에서 열람
+- **배포**: Windows x64 설치 프로그램(NSIS), MSI, 단독 실행 파일. 코드 서명은 되어 있지 않습니다
+- 검증은 Windows에서만 이루어졌고 macOS/Linux 빌드는 확인하지 못했습니다
+
+## 프로젝트 구조
+
+```
+src/
+  editor/        Tiptap 에디터, 확장(입력 규칙, 원본 문법 노출, 각주 등), 다이어그램 NodeView
+  ribbon/        리본 툴바와 상태바
+  menu/          메뉴 바(데스크탑), 메뉴 구성 모델, 도움말 창
+  commands/      커맨드 레지스트리, keymap.json, 파일 커맨드
+  markdown/      마크다운 ↔ 문서 트리 변환 (round-trip 테스트 포함)
+  platform/      웹 / 데스크탑 플랫폼 추상화 (파일 열기·저장, 네이티브 메뉴)
+  workers/       PlantUML 렌더링 Web Worker
+src-tauri/       Tauri(Rust) 데스크탑 래퍼와 아이콘
+docs/images/     로고, 배너, 스크린샷
+```
+
+개발 규칙과 설계 결정은 [`CLAUDE.md`](CLAUDE.md)에 정리되어 있습니다.
+
+## 기술 스택
+
+- **에디터 엔진**: [Tiptap](https://tiptap.dev) (ProseMirror)
+- **UI**: React + TypeScript + Tailwind CSS
+- **데스크탑**: [Tauri](https://tauri.app) v2
+- **다이어그램**: [Mermaid](https://mermaid.js.org), [`@plantuml/core`](https://www.npmjs.com/package/@plantuml/core) (TeaVM으로 컴파일한 PlantUML)
+- **마크다운**: markdown-it + prosemirror-markdown
+- **테스트**: Vitest
+
+## 라이선스
+
+[GNU Lesser General Public License v2.1](LICENSE) (`LGPL-2.1-only`) © [objectworld](https://github.com/objectworld)
+
+함께 배포되는 서드파티 구성 요소는 각자의 라이선스를 따릅니다(대부분 MIT/Apache-2.0/ISC/BSD이며, Mermaid가 사용하는
+`elkjs`는 EPL-2.0, `dompurify`는 MPL-2.0 또는 Apache-2.0입니다).

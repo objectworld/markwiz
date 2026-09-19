@@ -14,4 +14,4 @@ export function getPlatform(): Promise<PlatformAPI> {
   return cached;
 }
 
-export type { OpenedDocument, PlatformAPI, SavedDocument } from './types';
+export type { LocalFileKind, OpenedDocument, PickedFile, PlatformAPI, SavedDocument } from './types';

@@ -30,6 +30,10 @@ function wrapTableCellsInParagraphs(tokens: Token[]): Token[] {
 
 function createTokenizer(): MarkdownItInstance {
   const md = new MarkdownIt('default', { html: false }).use(footnote);
+  // markdown-it은 file: 주소를 링크/이미지로 인정하지 않는다. 로컬 파일 삽입(file:///C:/...)이
+  // 저장 후 다시 열었을 때 깨지지 않도록 file:만 추가로 허용한다(javascript:/vbscript:는 계속 막힌다).
+  const defaultValidateLink = md.validateLink.bind(md);
+  md.validateLink = (url) => defaultValidateLink(url) || /^file:/i.test(url.trim());
   const originalParse = md.parse.bind(md);
   md.parse = (src, env) => wrapTableCellsInParagraphs(originalParse(src, env));
   return md;

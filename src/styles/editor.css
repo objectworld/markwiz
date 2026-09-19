@@ -218,3 +218,13 @@
 .ProseMirror th > p {
   margin: 0;
 }
+
+/* 포커스 모드: 커서가 있는 블록만 또렷하게 보이고 나머지는 흐리게 한다. */
+.markwiz-focus-mode .ProseMirror > * {
+  opacity: 0.3;
+  transition: opacity 0.15s;
+}
+
+.markwiz-focus-mode .ProseMirror > .markwiz-current-block {
+  opacity: 1;
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d9784f"/>
+      <stop offset="1" stop-color="#b04f2e"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff3d6"/>
+      <stop offset="1" stop-color="#f6d493"/>
+    </linearGradient>
+  </defs>
+  <!-- 앱 아이콘 바탕: 둥근 사각형 (Claude 앱의 테라코타 톤) -->
+  <rect x="32" y="32" width="960" height="960" rx="224" fill="url(#bg)"/>
+  <!-- M: Markdown의 M. 가운데 골이 아래로 파인 형태 -->
+  <path d="M 270 736 L 270 330 L 512 610 L 754 330 L 754 736"
+        fill="none" stroke="#faf9f5" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 반짝임: Wiz(마법사)의 별 -->
+  <path transform="translate(816 172) scale(0.85) translate(-790 -270)" d="M 790 168 C 800 236 824 260 892 270 C 824 280 800 304 790 372 C 780 304 756 280 688 270 C 756 260 780 236 790 168 Z"
+        fill="url(#spark)"/>
+</svg>

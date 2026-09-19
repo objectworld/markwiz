@@ -30,3 +30,33 @@ export function toTauriAccelerator(combo: string): string {
   const normalizedKey = key.length === 1 ? key.toUpperCase() : key;
   return [...modifiers, normalizedKey].join('+');
 }
+
+// 키보드 이벤트가 "Ctrl+Shift+1" 같은 조합 문자열과 일치하는지 판별한다.
+// 에디터에 포커스가 없을 때(소스 모드 textarea, 웹 등) view.* 단축키를 처리하는 데 쓴다.
+export function matchesShortcut(
+  event: Pick<KeyboardEvent, 'key' | 'code' | 'ctrlKey' | 'metaKey' | 'altKey' | 'shiftKey'>,
+  combo: string,
+): boolean {
+  const parts = combo.split('+').map((part) => part.trim());
+  const key = parts[parts.length - 1];
+  const modifiers = new Set(parts.slice(0, -1).map((mod) => mod.toLowerCase()));
+
+  const wants = {
+    ctrl: modifiers.has('ctrl') || modifiers.has('control'),
+    meta: modifiers.has('cmd') || modifiers.has('command') || modifiers.has('meta'),
+    alt: modifiers.has('alt') || modifiers.has('option'),
+    shift: modifiers.has('shift'),
+  };
+  if (
+    event.ctrlKey !== wants.ctrl ||
+    event.metaKey !== wants.meta ||
+    event.altKey !== wants.alt ||
+    event.shiftKey !== wants.shift
+  ) {
+    return false;
+  }
+
+  // Shift+숫자는 event.key가 '!'처럼 바뀌므로 물리 키(code)로 비교한다.
+  if (/^[0-9]$/.test(key)) return event.code === `Digit${key}`;
+  return event.key.toLowerCase() === key.toLowerCase();
+}

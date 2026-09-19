@@ -17,6 +17,8 @@ beforeEach(() => {
   editor = new Editor({ extensions: editorExtensions, content: '<p>hello</p>' });
   setDocumentState({ path: null, name: 'untitled.md' });
   mockPlatform = {
+    localFileKinds: [],
+    pickLocalFile: vi.fn<PlatformAPI['pickLocalFile']>(),
     openFile: vi.fn<() => Promise<OpenedDocument | null>>(),
     saveFile: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     saveFileAs: vi.fn<() => Promise<SavedDocument | null>>(),

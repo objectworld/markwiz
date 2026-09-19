@@ -8,6 +8,7 @@ export const CSP = [
   "script-src 'self' 'wasm-unsafe-eval'",
   "worker-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https: blob:",
+  // http:/https: 외부 이미지, asset:/asset.localhost: Tauri가 로컬 파일 이미지를 내주는 주소
+  "img-src 'self' data: http: https: blob: asset: http://asset.localhost",
   "connect-src 'self'",
 ].join('; ');

@@ -1,10 +1,28 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
-import { basename, type OpenedDocument, type PlatformAPI, type SavedDocument } from '../types';
+import { pathToFileUrl } from '../localFile';
+import {
+  basename,
+  type LocalFileKind,
+  type OpenedDocument,
+  type PickedFile,
+  type PlatformAPI,
+  type SavedDocument,
+} from '../types';
 
 const MARKDOWN_FILTER = { name: 'Markdown', extensions: ['md', 'markdown'] };
 
+const IMAGE_FILTER = { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'avif'] };
+
 export const desktopPlatform: PlatformAPI = {
+  localFileKinds: ['image', 'any'],
+
+  async pickLocalFile(kind: LocalFileKind): Promise<PickedFile | null> {
+    const selected = await open({ multiple: false, filters: kind === 'image' ? [IMAGE_FILTER] : [] });
+    if (!selected || Array.isArray(selected)) return null;
+    return { url: pathToFileUrl(selected), name: basename(selected) };
+  },
+
   async openFile(): Promise<OpenedDocument | null> {
     const selected = await open({ multiple: false, filters: [MARKDOWN_FILTER] });
     if (!selected || Array.isArray(selected)) return null;

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { executeCommand } from '../commands/registry';
-import { useDocumentState } from '../commands/useDocumentState';
+import { useViewState } from '../commands/viewState';
 import { RibbonButton } from './RibbonButton';
 import {
   activeStyleValue,
@@ -13,6 +13,7 @@ import {
   insertActions,
   paragraphActions,
   STYLE_OPTIONS,
+  viewActions,
   type RibbonAction,
 } from './ribbonActions';
 
@@ -58,7 +59,8 @@ function RibbonGroup({ label, children }: { label: string; children: ReactNode }
 
 export function Ribbon({ editor }: { editor: Editor | null }) {
   const state = useRibbonState(editor);
-  const document = useDocumentState();
+  // 보기 토글은 에디터 트랜잭션과 무관하게 바뀌므로 viewState를 구독해 다시 그린다.
+  useViewState();
 
   const renderButtons = (actions: RibbonAction[]) =>
     actions.map((action) => (
@@ -66,24 +68,16 @@ export function Ribbon({ editor }: { editor: Editor | null }) {
         key={action.id}
         action={action}
         editor={editor}
-        active={state?.buttons[action.id]?.active ?? false}
+        active={action.id.startsWith('view.') ? (action.isActive?.(editor!) ?? false) : (state?.buttons[action.id]?.active ?? false)}
         disabled={state?.buttons[action.id]?.disabled ?? false}
       />
     ));
 
   return (
     <header className="select-none" aria-label="리본">
-      {/* 제목 표시줄: 빠른 실행 도구 모음 + 문서 이름 (Word 2016 스타일) */}
-      <div className="flex h-9 items-center border-b border-chrome-border bg-chrome px-2 text-ink">
-        <div className="flex items-center gap-0.5">
-          {renderButtons([fileActions[2], ...historyActions])}
-        </div>
-        <div className="flex-1 truncate px-4 text-center text-[13px]">{document.name} - Markwiz</div>
-        <div className="w-24" aria-hidden />
-      </div>
-
       <div className="flex h-[76px] overflow-x-auto border-b border-chrome-border bg-chrome px-1 [scrollbar-color:rgba(61,57,41,0.35)_transparent] [scrollbar-width:thin]" role="toolbar" aria-label="서식 도구 모음">
         <RibbonGroup label="파일">{renderButtons(fileActions)}</RibbonGroup>
+        <RibbonGroup label="편집">{renderButtons(historyActions)}</RibbonGroup>
         <RibbonGroup label="글꼴">
           <select
             aria-label="스타일"
@@ -106,6 +100,7 @@ export function Ribbon({ editor }: { editor: Editor | null }) {
         <RibbonGroup label="단락">{renderButtons(paragraphActions)}</RibbonGroup>
         <RibbonGroup label="삽입">{renderButtons(insertActions)}</RibbonGroup>
         <RibbonGroup label="다이어그램">{renderButtons(diagramActions)}</RibbonGroup>
+        <RibbonGroup label="보기">{renderButtons(viewActions)}</RibbonGroup>
       </div>
     </header>
   );

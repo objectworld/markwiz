@@ -1,10 +1,10 @@
-import type { OpenedDocument, PlatformAPI, SavedDocument } from '../types';
+import type { LocalFileKind, OpenedDocument, PickedFile, PlatformAPI, SavedDocument } from '../types';
 
-function pickFile(): Promise<File | null> {
+function pickFile(accept = '.md,.markdown,text/markdown'): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.md,.markdown,text/markdown';
+    input.accept = accept;
     input.onchange = () => resolve(input.files?.[0] ?? null);
     input.click();
   });
@@ -24,7 +24,31 @@ function download(filename: string, content: string): void {
 
 // 웹에는 파일시스템 접근 권한이 없으므로 열기는 <input type="file"> 선택,
 // 저장은 항상 다운로드로 처리한다 (CLAUDE.md의 플랫폼 추상화 요구사항대로).
+// 웹에서 이미지를 문서에 넣으려면 data URL로 내용을 통째로 담는 수밖에 없어, 마크다운이 커지지 않도록 크기를 제한한다.
+const MAX_WEB_IMAGE_BYTES = 1024 * 1024;
+
+function readAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('파일을 읽지 못했습니다.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export const webPlatform: PlatformAPI = {
+  localFileKinds: ['image'],
+
+  async pickLocalFile(kind: LocalFileKind): Promise<PickedFile | null> {
+    if (kind !== 'image') return null;
+    const file = await pickFile('image/*');
+    if (!file) return null;
+    if (file.size > MAX_WEB_IMAGE_BYTES) {
+      throw new Error('웹에서는 1MB 이하 이미지만 파일로 넣을 수 있습니다. 이미지 주소를 입력하세요.');
+    }
+    return { url: await readAsDataUrl(file), name: file.name };
+  },
+
   async openFile(): Promise<OpenedDocument | null> {
     const file = await pickFile();
     if (!file) return null;

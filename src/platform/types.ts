@@ -10,7 +10,19 @@ export interface SavedDocument {
   name: string;
 }
 
+export type LocalFileKind = 'image' | 'any';
+
+export interface PickedFile {
+  // 문서에 저장할 주소. 데스크탑: file:// URL, 웹(이미지): data: URL.
+  url: string;
+  name: string;
+}
+
 export interface PlatformAPI {
+  // 링크/이미지 삽입 창에서 "파일 선택"이 지원하는 종류. 웹은 파일 경로를 얻을 수 없어 이미지(data URL)만 가능하다.
+  readonly localFileKinds: readonly LocalFileKind[];
+  // 사용자가 취소하면 null.
+  pickLocalFile(kind: LocalFileKind): Promise<PickedFile | null>;
   openFile(): Promise<OpenedDocument | null>;
   // 데스크탑: 실제 경로에 덮어쓰기. 웹: path를 파일명으로 써서 다운로드.
   saveFile(path: string, content: string): Promise<void>;
