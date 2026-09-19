@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { NodeViewContent, NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import { DiagramToggle, type DiagramViewMode } from './DiagramToggle';
-import { renderMermaid } from './mermaidRenderer';
 import { useDebouncedValue } from './useDebouncedValue';
 
+interface DiagramViewProps extends ReactNodeViewProps {
+  type: string;
+  render: (source: string) => Promise<string>;
+}
+
+// Mermaid/PlantUML이 공유하는 다이어그램 노드뷰. 렌더러만 바꿔 끼운다.
 // ProseMirror의 contentDOM(NodeViewContent)은 항상 마운트된 상태를 유지해야
-// 커서/선택 매핑이 깨지지 않는다. 코드/미리보기 전환은 조건부 렌더링이 아니라
+// 커서/선택 매핑이 깨지지 않으므로, 코드/미리보기 전환은 조건부 렌더링이 아니라
 // CSS로 감춰서 처리한다.
-export function MermaidView({ node }: ReactNodeViewProps) {
+export function DiagramView({ node, type, render }: DiagramViewProps) {
   // 새로 만든(비어 있는) 블록은 코드 모드로 시작해야 한다 — 미리보기 모드는
   // <pre>를 display:none으로 감추는데, 생성 직후 커서를 그 안에 두려는
   // ProseMirror의 시도가 숨겨진 요소에는 캐럿을 놓을 수 없어 조용히
@@ -27,7 +32,7 @@ export function MermaidView({ node }: ReactNodeViewProps) {
     }
 
     let cancelled = false;
-    renderMermaid(debouncedSource)
+    render(debouncedSource)
       .then((result) => {
         if (cancelled) return;
         setSvg(result);
@@ -42,10 +47,10 @@ export function MermaidView({ node }: ReactNodeViewProps) {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSource]);
+  }, [debouncedSource, render]);
 
   return (
-    <NodeViewWrapper className="markwiz-diagram" data-diagram-type="mermaid">
+    <NodeViewWrapper className="markwiz-diagram" data-diagram-type={type}>
       <DiagramToggle mode={mode} onToggle={() => setMode((m) => (m === 'preview' ? 'code' : 'preview'))} />
       <pre className={mode === 'code' ? 'markwiz-diagram-source' : 'markwiz-diagram-source markwiz-hidden'}>
         <NodeViewContent<'code'> as="code" />

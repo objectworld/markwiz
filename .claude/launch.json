@@ -1,11 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    {
-      "name": "markwiz-dev",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev"],
-      "port": 5173
-    }
+    { "name": "markwiz-dev", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 5173 },
+    { "name": "markwiz-preview", "runtimeExecutable": "pnpm", "runtimeArgs": ["preview", "--port", "4173", "--strictPort"], "port": 4173 }
   ]
 }

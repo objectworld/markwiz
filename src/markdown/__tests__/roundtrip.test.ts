@@ -97,6 +97,18 @@ graph TD; A-->B;
     );
   });
 
+  it('plantuml code fence (rendered by a custom node view, still plain markdown text)', () => {
+    expectRoundtrip(
+      `
+\`\`\`plantuml
+@startuml
+Alice -> Bob : hi
+@enduml
+\`\`\`
+`,
+    );
+  });
+
   it('link and image', () => {
     expectRoundtrip('See [Markwiz](https://example.com) and ![alt text](https://example.com/x.png).');
   });

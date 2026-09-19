@@ -29,6 +29,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@plantuml/core": "^1.2026.8",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-dialog": "^2.7.3",
     "@tauri-apps/plugin-fs": "^2.5.2",
@@ -48,6 +49,8 @@
     "@tiptap/pm": "^3.31.3",
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
+    "@xmldom/xmldom": "^0.9.12",
+    "dompurify": "^3.4.15",
     "lowlight": "^3.3.0",
     "markdown-it": "^15.0.2",
     "markdown-it-footnote": "^4.0.0",
