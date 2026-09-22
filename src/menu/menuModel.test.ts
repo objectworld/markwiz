@@ -36,3 +36,39 @@ describe('native menu model', () => {
     expect(submenu && submenu.kind === 'submenu' && submenu.entries).toHaveLength(7);
   });
 });
+
+describe('파일 > 최근에 연 파일', () => {
+  const recentFiles = Array.from({ length: 10 }, (_, i) => ({ path: `C:\\docs\\note${i}.md`, name: `note${i}.md` }));
+  const submenuOf = (groups: ReturnType<typeof buildMenuModel>) => {
+    const entry = groups[0].entries.find((candidate) => candidate.kind === 'submenu');
+    if (!entry || entry.kind !== 'submenu') throw new Error('no submenu');
+    return entry;
+  };
+
+  it('is a submenu of the file menu, after a separator that follows the file commands', () => {
+    const file = buildMenuModel(loadKeymap(), recentFiles)[0];
+    expect(file.text).toBe('파일');
+    const kinds = file.entries.map((entry) => entry.kind);
+    expect(kinds.slice(-2)).toEqual(['separator', 'submenu']);
+    expect(submenuOf(buildMenuModel(loadKeymap())).text).toBe('최근에 연 파일');
+  });
+
+  it('shows a disabled placeholder when nothing was opened yet', () => {
+    const { entries } = submenuOf(buildMenuModel(loadKeymap(), []));
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ kind: 'item', text: '(최근 파일 없음)', disabled: true });
+  });
+
+  it('lists the files in order with their folder, plus a clear action', () => {
+    const { entries } = submenuOf(buildMenuModel(loadKeymap(), recentFiles));
+    const items = entries.filter((entry) => entry.kind === 'item');
+    expect(items.map((entry) => entry.text)).toEqual([...recentFiles.map((file) => file.name), '목록 지우기']);
+    expect(items[0]).toMatchObject({ detail: 'C:/docs', title: 'C:\\docs\\note0.md' });
+    expect(entries.filter((entry) => entry.kind === 'item' && entry.id.startsWith('recent:'))).toHaveLength(10);
+  });
+
+  it('keeps the file menu top-level items identical to the ribbon file group', () => {
+    const names = buildMenuModel(loadKeymap(), recentFiles)[0].entries.flatMap((entry) => (entry.kind === 'item' ? [entry.text] : []));
+    expect(names).toEqual(['새로 만들기', '열기', '저장', '다른 이름으로 저장']);
+  });
+});

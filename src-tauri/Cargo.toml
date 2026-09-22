@@ -1,6 +1,6 @@
 [package]
 name = "markwiz"
-version = "0.1.0"
+version = "0.1.1"
 description = "Typora-style WYSIWYG Markdown editor with Mermaid & PlantUML diagrams"
 authors = ["objectworld"]
 license = "LGPL-2.1-only"

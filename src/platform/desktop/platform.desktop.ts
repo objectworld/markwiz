@@ -31,6 +31,11 @@ export const desktopPlatform: PlatformAPI = {
     return { path: selected, name: basename(selected), content };
   },
 
+  async openFileAt(path: string): Promise<OpenedDocument> {
+    const content = await readTextFile(path);
+    return { path, name: basename(path), content };
+  },
+
   async saveFile(path: string, content: string): Promise<void> {
     await writeTextFile(path, content);
   },

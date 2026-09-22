@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Editor } from '@tiptap/core';
 import { FolderOpen } from 'lucide-react';
-import { normalizeUrl } from '../platform/localFile';
+import { getDocumentState } from '../commands/documentState';
+import { normalizeUrl, relativizeLocalUrl } from '../platform/localFile';
 import { getPlatform, type LocalFileKind } from '../platform';
 import type { InsertRequest } from '../commands/viewState';
 
@@ -11,10 +12,15 @@ interface InsertValues {
   alt: string;
 }
 
+// 입력값을 문서에 저장할 주소로 다듬는다. 문서와 같은 폴더/하위 폴더의 로컬 파일은 상대 경로가 된다.
+function toStoredUrl(input: string): string {
+  return relativizeLocalUrl(normalizeUrl(input), getDocumentState().path);
+}
+
 // 링크: 선택 영역(또는 커서가 놓인 링크)이 있으면 그 범위에 적용하고, 없으면 표시 텍스트를 새로 넣는다.
 // 주소를 비우면 링크를 제거한다.
 export function applyLink(editor: Editor, request: InsertRequest, { url, text }: InsertValues): boolean {
-  const href = normalizeUrl(url);
+  const href = toStoredUrl(url);
   const chain = editor.chain().focus();
   if (!href) return chain.extendMarkRange('link').unsetLink().run();
   if (!request.hasSelection) {
@@ -26,7 +32,7 @@ export function applyLink(editor: Editor, request: InsertRequest, { url, text }:
 }
 
 export function applyImage(editor: Editor, { url, alt }: InsertValues): boolean {
-  const src = normalizeUrl(url);
+  const src = toStoredUrl(url);
   if (!src) return false;
   return editor.chain().focus().setImage({ src, alt: alt.trim() || undefined }).run();
 }
@@ -64,7 +70,7 @@ export function InsertDialog({ editor, request, onClose }: { editor: Editor; req
     try {
       const picked = await (await getPlatform()).pickLocalFile(fileKind);
       if (!picked) return;
-      setUrl(picked.url);
+      setUrl(relativizeLocalUrl(picked.url, getDocumentState().path));
       setFileName(picked.name);
       if (isImage && !alt) setAlt(picked.name.replace(/\.[^.]+$/, ''));
       if (!isImage && !text) setText(picked.name);

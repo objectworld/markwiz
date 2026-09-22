@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setDocumentState } from '../commands/documentState';
 import { executeCommand } from '../commands/registry';
 import '../commands/defaultCommands';
 import { getViewState, resetViewState } from '../commands/viewState';
@@ -28,7 +29,10 @@ beforeEach(() => {
   };
 });
 
-afterEach(() => resetViewState());
+afterEach(() => {
+  resetViewState();
+  setDocumentState({ path: null, name: 'untitled.md' });
+});
 
 function Harness({ content, onEditor }: { content: string; onEditor: (editor: Editor) => void }) {
   const editor = useEditor({ extensions: editorExtensions, content, immediatelyRender: false });
@@ -172,5 +176,50 @@ describe('InsertDialog', () => {
     render(<InsertDialog editor={editor} request={{ kind: 'link', url: '', hasSelection: false }} onClose={() => (closed = true)} />);
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
     expect(closed).toBe(true);
+  });
+});
+
+describe('files inside the document folder become relative paths', () => {
+  beforeEach(() => setDocumentState({ path: 'C:\\docs\\note.md', name: 'note.md' }));
+
+  it('stores an image in a subfolder as a relative path after picking it', async () => {
+    const editor = await setup('<p></p>');
+    vi.mocked(mockPlatform.pickLocalFile).mockResolvedValue({ url: 'file:///C:/docs/img/my%20cat.png', name: 'my cat.png' });
+    render(<InsertDialog editor={editor} request={{ kind: 'image', url: '', hasSelection: false }} onClose={() => undefined} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /파일 선택/ }));
+    await waitFor(() => expect(screen.getByLabelText('이미지 주소 또는 파일')).toHaveValue('./img/my%20cat.png'));
+
+    fireEvent.click(screen.getByRole('button', { name: '삽입' }));
+    expect(serializeToMarkdown(editor.state.doc)).toBe('![my cat](./img/my%20cat.png)');
+  });
+
+  it('keeps an absolute file URL for a file outside the document folder', async () => {
+    const editor = await setup('<p></p>');
+    applyImage(editor, { ...values, url: 'file:///C:/other/cat.png' });
+    expect(serializeToMarkdown(editor.state.doc)).toBe('![](file:///C:/other/cat.png)');
+  });
+
+  it('converts a typed Windows path for links and images', async () => {
+    const editor = await setup();
+    editor.commands.setTextSelection({ from: 1, to: 6 });
+    applyLink(editor, { kind: 'link', url: '', hasSelection: true }, { ...values, url: 'C:\\docs\\files\\a.pdf' });
+    expect(serializeToMarkdown(editor.state.doc)).toBe('[hello](./files/a.pdf) world');
+
+    editor.commands.clearContent();
+    applyImage(editor, { ...values, url: 'C:\\docs\\cat.png' });
+    expect(serializeToMarkdown(editor.state.doc)).toBe('![](./cat.png)');
+  });
+
+  it('does not turn a typed bare file name into a website', async () => {
+    const editor = await setup('<p></p>');
+    applyImage(editor, { ...values, url: 'cat.png' });
+    expect(serializeToMarkdown(editor.state.doc)).toBe('![](cat.png)');
+  });
+
+  it('round-trips relative links and images through markdown', async () => {
+    const editor = await setup();
+    const markdown = '[문서](./files/a%20b.pdf) ![그림](./img/cat.png)';
+    expect(serializeToMarkdown(parseMarkdown(editor.schema, markdown))).toBe(markdown);
   });
 });

@@ -1,6 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { useDocumentState } from '../commands/useDocumentState';
+import { useViewState } from '../commands/viewState';
 
 const BLOCK_LABELS: Record<string, string> = {
   codeBlock: '코드 블록',
@@ -50,6 +51,7 @@ function useStatusState(editor: Editor | null) {
 export function StatusBar({ editor }: { editor: Editor | null }) {
   const status = useStatusState(editor);
   const document = useDocumentState();
+  const { notice } = useViewState();
 
   return (
     <footer
@@ -62,6 +64,11 @@ export function StatusBar({ editor }: { editor: Editor | null }) {
       <span>단어 {status?.words ?? 0}개</span>
       <span title={`공백 포함 ${status?.withSpaces ?? 0}자`}>글자 {status?.characters ?? 0}자</span>
       {status && status.selected > 0 && <span>선택 {status.selected}자</span>}
+      {notice && (
+        <span role="status" className="truncate text-accent">
+          {notice}
+        </span>
+      )}
       <span className="ml-auto">{status?.block ?? '본문'}</span>
       <span>Markdown</span>
     </footer>

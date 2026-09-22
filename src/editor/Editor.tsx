@@ -79,7 +79,18 @@ export function Editor() {
 
   useEffect(() => {
     if (!editor || !isTauri() || USE_IN_APP_MENU) return;
-    import('../platform/desktop/menu').then((m) => m.installNativeMenu(editor));
+    let cancelled = false;
+    let dispose: (() => void) | undefined;
+    void import('../platform/desktop/menu')
+      .then((m) => m.installNativeMenu(editor))
+      .then((unsubscribe) => {
+        if (cancelled) unsubscribe();
+        else dispose = unsubscribe;
+      });
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
   }, [editor]);
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import '../commands/viewCommands';
+import { addRecentFile, clearRecentFiles, getRecentFiles } from '../commands/recentFiles';
 import { getViewState, resetViewState, setViewState } from '../commands/viewState';
 import { editorExtensions } from '../editor/extensions';
 import { APP_LICENSE, APP_VERSION } from '../appInfo';
@@ -31,7 +32,10 @@ async function setup() {
   return editor;
 }
 
-afterEach(() => resetViewState());
+afterEach(() => {
+  resetViewState();
+  clearRecentFiles();
+});
 
 describe('MenuBar', () => {
   it('lists the top-level menus in order, ending with 도움말', async () => {
@@ -73,6 +77,27 @@ describe('MenuBar', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: '도움말' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'README 보기' }));
     expect(getViewState().help).toBe(true);
+  });
+});
+
+describe('최근에 연 파일 submenu', () => {
+  it('lists the recent files, shows the folder, and updates when a file is added', async () => {
+    await setup();
+    fireEvent.click(screen.getByRole('menuitem', { name: '파일' }));
+    expect(await screen.findByRole('menuitem', { name: '(최근 파일 없음)' })).toBeDisabled();
+
+    act(() => addRecentFile({ path: 'C:\\docs\\notes\\a.md', name: 'a.md' }));
+    const item = await screen.findByRole('menuitem', { name: /a\.md/ });
+    expect(item).toHaveTextContent('C:/docs/notes');
+    expect(item).toHaveAttribute('title', 'C:\\docs\\notes\\a.md');
+  });
+
+  it('clears the list from the submenu', async () => {
+    await setup();
+    act(() => addRecentFile({ path: 'C:\\docs\\a.md', name: 'a.md' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: '파일' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: '목록 지우기' }));
+    expect(getRecentFiles()).toEqual([]);
   });
 });
 

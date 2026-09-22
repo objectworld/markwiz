@@ -19,6 +19,8 @@ export interface ViewState {
   // 정보(버전/소개) 창 표시 여부
   about: boolean;
   insert: InsertRequest | null;
+  // 상태바에 잠깐 보여주는 안내 문구 (빈 문자열이면 없음)
+  notice: string;
   // 소스 모드에서 textarea가 편집하는 마크다운 원문. 소스 모드가 꺼져 있을 때는 의미가 없다.
   sourceText: string;
 }
@@ -31,6 +33,7 @@ const initialState: ViewState = {
   help: false,
   about: false,
   insert: null,
+  notice: '',
   sourceText: '',
 };
 
@@ -47,8 +50,17 @@ export function setViewState(patch: Partial<ViewState>): void {
 }
 
 export function resetViewState(): void {
+  clearTimeout(noticeTimer);
   state = initialState;
   listeners.forEach((listener) => listener());
+}
+
+let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+
+export function showNotice(message: string, durationMs = 6000): void {
+  clearTimeout(noticeTimer);
+  setViewState({ notice: message });
+  noticeTimer = setTimeout(() => setViewState({ notice: '' }), durationMs);
 }
 
 export function subscribeViewState(listener: () => void): () => void {

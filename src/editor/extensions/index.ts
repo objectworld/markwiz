@@ -11,6 +11,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react';
 import TaskList from '@tiptap/extension-task-list';
 import Image from '@tiptap/extension-image';
 import { mergeAttributes } from '@tiptap/core';
+import { getDocumentState } from '../../commands/documentState';
 import { resolveDisplaySrc } from '../../platform/localFile';
 import { TableKit } from '@tiptap/extension-table';
 import { TaskItem } from './taskItem';
@@ -56,12 +57,12 @@ export const editorExtensions = [
   TaskItem,
   // Tiptap Image는 기본이 block 레벨 노드라 문단 안에 들어갈 수 없다.
   // 마크다운의 `텍스트 ![alt](src) 텍스트`처럼 인라인으로 쓰기 위해 명시적으로 켠다.
-  // 화면에 그릴 때만 file:// 주소를 웹뷰가 읽을 수 있는 주소로 바꾸고, 문서(직렬화)에는 원래 값이 남는다.
+  // 화면에 그릴 때만 file:// 주소와 상대 경로를 웹뷰가 읽을 수 있는 주소로 바꾸고, 문서(직렬화)에는 원래 값이 남는다.
   Image.extend({
     renderHTML({ HTMLAttributes }) {
       return [
         'img',
-        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { src: resolveDisplaySrc(HTMLAttributes.src) }),
+        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { src: resolveDisplaySrc(HTMLAttributes.src, getDocumentState().path) }),
       ];
     },
   }).configure({ inline: true }),

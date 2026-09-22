@@ -19,6 +19,9 @@ export interface PickedFile {
 }
 
 export interface PlatformAPI {
+  // 경로로 파일을 바로 연다(최근에 연 파일). 파일 경로를 아는 데스크탑에서만 구현한다.
+  // 이 메서드가 있는 플랫폼에서만 최근 파일 목록을 기록한다. 파일이 없거나 읽을 수 없으면 예외를 던진다.
+  openFileAt?(path: string): Promise<OpenedDocument>;
   // 링크/이미지 삽입 창에서 "파일 선택"이 지원하는 종류. 웹은 파일 경로를 얻을 수 없어 이미지(data URL)만 가능하다.
   readonly localFileKinds: readonly LocalFileKind[];
   // 사용자가 취소하면 null.

@@ -1,5 +1,7 @@
 import type { Editor } from '@tiptap/core';
+import { openRecentFile } from '../commands/fileCommands';
 import { getShortcutForPlatform, type KeymapConfig } from '../commands/keymap';
+import { clearRecentFiles, folderOf, type RecentFile } from '../commands/recentFiles';
 import { executeCommand } from '../commands/registry';
 import { toTauriAccelerator } from '../commands/shortcutFormat';
 import { setViewState } from '../commands/viewState';
@@ -24,6 +26,10 @@ export type MenuEntry =
       shortcut?: string;
       // 네이티브 메뉴 accelerator. 파일/보기 항목만 갖는다.
       accelerator?: string;
+      // 항목 오른쪽에 흐리게 보여줄 보조 글(예: 최근 파일이 있는 폴더)과 마우스를 올렸을 때 보이는 전체 설명
+      detail?: string;
+      title?: string;
+      disabled?: boolean;
       run: (editor: Editor) => void;
     }
   | { kind: 'separator' }
@@ -51,13 +57,43 @@ function toEntry(action: RibbonAction, keymap: KeymapConfig): MenuEntry {
   };
 }
 
-export function buildMenuModel(keymap: KeymapConfig): MenuGroup[] {
+export const RECENT_MENU_TEXT = '최근에 연 파일';
+
+function recentFilesSubmenu(files: readonly RecentFile[]): MenuEntry {
+  if (files.length === 0) {
+    return {
+      kind: 'submenu',
+      text: RECENT_MENU_TEXT,
+      entries: [{ kind: 'item', id: 'recent.empty', text: '(최근 파일 없음)', disabled: true, run: () => undefined }],
+    };
+  }
+  return {
+    kind: 'submenu',
+    text: RECENT_MENU_TEXT,
+    entries: [
+      ...files.map(
+        (file): MenuEntry => ({
+          kind: 'item',
+          id: `recent:${file.path}`,
+          text: file.name,
+          detail: folderOf(file.path),
+          title: file.path,
+          run: (editor) => void openRecentFile(editor, file.path),
+        }),
+      ),
+      { kind: 'separator' },
+      { kind: 'item', id: 'recent.clear', text: '목록 지우기', run: () => clearRecentFiles() },
+    ],
+  };
+}
+
+export function buildMenuModel(keymap: KeymapConfig, recentFiles: readonly RecentFile[] = []): MenuGroup[] {
   const entries = (actions: RibbonAction[]) => actions.map((action) => toEntry(action, keymap));
 
   return [
     {
       text: '파일',
-      entries: entries(fileActions),
+      entries: [...entries(fileActions), { kind: 'separator' }, recentFilesSubmenu(recentFiles)],
     },
     { text: '편집', entries: entries(historyActions) },
     {

@@ -146,6 +146,12 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   웹에는 메뉴 바가 없다(리본만) — 그래서 웹에서는 도움말에 접근할 수 없다.
   앱 안 메뉴 바/웹에서는 파일·보기 단축키를 `Editor.tsx`의 window keydown 리스너가 처리한다(에디터가 처리한 키는 건너뜀).
   서식 항목은 accelerator 없이 단축키 표시만 한다(Tiptap 키맵과 이중 실행 방지).
+- **파일 > 최근에 연 파일**(최대 10개, `MAX_RECENT_FILES`): 목록은 `src/commands/recentFiles.ts`가 localStorage(`markwiz:recent-files`)에 두고
+  `useRecentFiles`로 구독한다. 메뉴 모델은 `buildMenuModel(keymap, recentFiles)`가 서브메뉴로 만들고 `MenuBar`가 목록이 바뀔 때 다시 만든다
+  (macOS 네이티브 메뉴는 `installNativeMenu`가 구독해서 통째로 다시 설정, 반환값이 구독 해제 함수). 기록은 `file.open`/`file.save*`에서
+  `rememberFile`이 하며, **`PlatformAPI.openFileAt`이 있는 플랫폼(데스크탑)에서만** 기록한다(웹의 "경로"는 파일명일 뿐이라). 여는 함수는
+  `fileCommands.openRecentFile` — 열기 실패 시 목록에서 빼고 `showNotice`(상태바 안내)로 알린다. 경로 비교는 윈도우 경로면 대소문자/`\`·`/` 무시.
+  레지스트리 커맨드가 아니라 메뉴 항목의 `run` 클로저다(경로 인자가 필요하고 단축키가 없어서)
 - **도움말**: `HelpDialog`가 `README.md?raw`를 읽기 전용 에디터로 보여준다. 사용자 문서와 별개 인스턴스이며
   `commandKeymap`/`focusLineDecoration`을 뺀다(넣으면 Ctrl+S가 README를 저장함). raw HTML 배너는 제거하고 이미지 경로를 번들 URL로 바꾼다
 - **도움말 > Markwiz 정보**(`AboutDialog`): 버전은 `src/appInfo.ts`가 package.json에서 읽고, 소개글·라이선스도 그 파일에 둔다.
@@ -154,8 +160,8 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(117개), `pnpm test`
-- 현재 버전 **0.1.0**(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(160개), `pnpm test`
+- 현재 버전 **0.1.1**(2026-09-23). 이전: 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
   함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)
 
@@ -187,7 +193,11 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   ① markdown-it `validateLink`에 `file:` 추가(안 하면 재열기 시 링크/이미지가 깨짐), ② Tiptap Link `protocols: ['file']`,
   ③ 이미지 `renderHTML`이 `file://`을 `convertFileSrc`(asset 프로토콜)로 바꿔 그린다(문서 값은 그대로).
   asset 프로토콜은 `tauri` 크레이트의 `protocol-asset` feature + `tauri.conf.json`의 `assetProtocol`(scope `**`, fs scope와 동일 수준) +
-  CSP `img-src`의 `asset: http://asset.localhost`가 모두 있어야 동작한다. 외부 `http:` 이미지도 보이도록 `img-src`에 `http:`를 허용했다
+  CSP `img-src`의 `asset: http://asset.localhost`가 모두 있어야 동작한다.
+  **상대 경로**: 문서 폴더 또는 그 하위 폴더의 파일은 삽입 시 `relativizeLocalUrl`이 `./img/a.png`(항상 `./` 접두, `normalizeUrl`이 `a.png`를
+  도메인으로 오해하지 않게)로 바꿔 저장한다. 상위 폴더/다른 곳/저장 전 문서는 절대 `file://` 유지. 화면 표시는 `resolveDisplaySrc(src, 문서경로)`가
+  상대 경로를 문서 폴더 기준으로 풀어 asset URL로 바꾼다 — 그래서 `file.open`은 **문서 경로를 먼저 갱신한 뒤** 내용을 넣어야 한다(순서 바꾸지 말 것).
+  Save As로 폴더가 바뀌어도 기존 상대 경로는 재작성하지 않는다 외부 `http:` 이미지도 보이도록 `img-src`에 `http:`를 허용했다
 
 ## 빌드 / 배포
 - 개발 `pnpm dev`, 웹 빌드 `pnpm build`, 데스크탑 `pnpm tauri build` (Tauri v2, Rust + MSVC Build Tools 필요 — 설치됨)
