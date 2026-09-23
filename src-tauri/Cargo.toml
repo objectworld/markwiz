@@ -1,6 +1,6 @@
 [package]
 name = "markwiz"
-version = "0.1.1"
+version = "0.1.2"
 description = "Typora-style WYSIWYG Markdown editor with Mermaid & PlantUML diagrams"
 authors = ["objectworld"]
 license = "LGPL-2.1-only"
@@ -25,3 +25,4 @@ tauri = { version = "2.11.3", features = ["protocol-asset"] }
 tauri-plugin-log = "2"
 tauri-plugin-fs = "2.5.2"
 tauri-plugin-dialog = "2.7.3"
+tauri-plugin-single-instance = "2"

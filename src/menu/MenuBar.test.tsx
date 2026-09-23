@@ -80,6 +80,16 @@ describe('MenuBar', () => {
   });
 });
 
+describe('파일 > 내보내기 submenu', () => {
+  it('shows PDF and Word export items inside the file menu', async () => {
+    await setup();
+    fireEvent.click(screen.getByRole('menuitem', { name: '파일' }));
+    expect(await screen.findByRole('menuitem', { name: '내보내기' })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: 'PDF로 내보내기' })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: 'Word로 내보내기' })).toBeInTheDocument();
+  });
+});
+
 describe('최근에 연 파일 submenu', () => {
   it('lists the recent files, shows the folder, and updates when a file is added', async () => {
     await setup();

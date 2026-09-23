@@ -7,6 +7,7 @@ import { toTauriAccelerator } from '../commands/shortcutFormat';
 import { setViewState } from '../commands/viewState';
 import {
   diagramActions,
+  exportActions,
   fileActions,
   fontActions,
   historyActions,
@@ -58,6 +59,7 @@ function toEntry(action: RibbonAction, keymap: KeymapConfig): MenuEntry {
 }
 
 export const RECENT_MENU_TEXT = '최근에 연 파일';
+export const EXPORT_MENU_TEXT = '내보내기';
 
 function recentFilesSubmenu(files: readonly RecentFile[]): MenuEntry {
   if (files.length === 0) {
@@ -93,7 +95,13 @@ export function buildMenuModel(keymap: KeymapConfig, recentFiles: readonly Recen
   return [
     {
       text: '파일',
-      entries: [...entries(fileActions), { kind: 'separator' }, recentFilesSubmenu(recentFiles)],
+      entries: [
+        ...entries(fileActions),
+        { kind: 'separator' },
+        // 리본에서는 별도 "내보내기" 그룹이지만, 메뉴에서는 Typora처럼 파일 메뉴의 서브메뉴다.
+        { kind: 'submenu', text: EXPORT_MENU_TEXT, entries: entries(exportActions) },
+        recentFilesSubmenu(recentFiles),
+      ],
     },
     { text: '편집', entries: entries(historyActions) },
     {

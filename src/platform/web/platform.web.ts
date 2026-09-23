@@ -10,8 +10,7 @@ function pickFile(accept = '.md,.markdown,text/markdown'): Promise<File | null> 
   });
 }
 
-function download(filename: string, content: string): void {
-  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+function downloadBlob(filename: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -20,6 +19,10 @@ function download(filename: string, content: string): void {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+function download(filename: string, content: string): void {
+  downloadBlob(filename, new Blob([content], { type: 'text/markdown;charset=utf-8' }));
 }
 
 // 웹에는 파일시스템 접근 권한이 없으므로 열기는 <input type="file"> 선택,
@@ -61,6 +64,12 @@ export const webPlatform: PlatformAPI = {
 
   async saveFileAs(content: string, suggestedName: string): Promise<SavedDocument | null> {
     download(suggestedName, content);
+    return { path: suggestedName, name: suggestedName };
+  },
+
+  async saveBinaryFileAs(data: Uint8Array, suggestedName: string): Promise<SavedDocument | null> {
+    // 웹은 저장 대화상자가 없어 다운로드로 바로 저장한다 — filter는 데스크탑 전용(대화상자 확장자 필터)이라 여기선 쓰지 않는다.
+    downloadBlob(suggestedName, new Blob([data.buffer as ArrayBuffer]));
     return { path: suggestedName, name: suggestedName };
   },
 };

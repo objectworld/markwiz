@@ -28,6 +28,7 @@ beforeEach(() => {
     openFile: vi.fn<() => Promise<OpenedDocument | null>>(),
     saveFile: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
     saveFileAs: vi.fn<() => Promise<SavedDocument | null>>(),
+    saveBinaryFileAs: vi.fn<PlatformAPI['saveBinaryFileAs']>(),
   };
 });
 

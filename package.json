@@ -1,6 +1,6 @@
 {
   "name": "markwiz",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Typora-style WYSIWYG Markdown editor with Mermaid & PlantUML diagrams, built with Tiptap. Web + Desktop (Tauri).",
   "private": true,
   "license": "LGPL-2.1-only",
@@ -50,6 +50,7 @@
     "@tiptap/react": "^3.31.3",
     "@tiptap/starter-kit": "^3.31.3",
     "@xmldom/xmldom": "^0.9.12",
+    "docx": "^9.7.1",
     "dompurify": "^3.4.15",
     "lowlight": "^3.3.0",
     "lucide-react": "^1.47.0",
@@ -69,6 +70,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^30.0.1",
+    "jszip": "^3.10.2",
     "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",

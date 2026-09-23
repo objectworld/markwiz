@@ -7,6 +7,7 @@ import { RibbonButton } from './RibbonButton';
 import {
   activeStyleValue,
   diagramActions,
+  exportActions,
   fileActions,
   fontActions,
   historyActions,
@@ -24,6 +25,7 @@ const ALL_ACTIONS: RibbonAction[] = [
   ...paragraphActions,
   ...insertActions,
   ...diagramActions,
+  ...exportActions,
 ];
 
 interface ButtonState {
@@ -100,6 +102,7 @@ export function Ribbon({ editor }: { editor: Editor | null }) {
         <RibbonGroup label="단락">{renderButtons(paragraphActions)}</RibbonGroup>
         <RibbonGroup label="삽입">{renderButtons(insertActions)}</RibbonGroup>
         <RibbonGroup label="다이어그램">{renderButtons(diagramActions)}</RibbonGroup>
+        <RibbonGroup label="내보내기">{renderButtons(exportActions)}</RibbonGroup>
         <RibbonGroup label="보기">{renderButtons(viewActions)}</RibbonGroup>
       </div>
     </header>

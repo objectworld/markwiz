@@ -93,6 +93,23 @@ export function Editor() {
     };
   }, [editor]);
 
+  // .md 파일 연결로 실행됐을 때(탐색기 더블클릭) 그 파일을 연다. 메뉴 바 종류와 무관하게 항상 켠다.
+  useEffect(() => {
+    if (!editor || !isTauri()) return;
+    let cancelled = false;
+    let dispose: (() => void) | undefined;
+    void import('../platform/desktop/startupFile')
+      .then((m) => m.installStartupFileHandling(editor))
+      .then((unlisten) => {
+        if (cancelled) unlisten();
+        else dispose = unlisten;
+      });
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  }, [editor]);
+
   useEffect(() => {
     const title = `${document.name} - Markwiz`;
     window.document.title = title;
@@ -118,7 +135,7 @@ export function Editor() {
           {/* 소스 모드에서도 에디터(다이어그램 NodeView 포함)를 언마운트하지 않고 숨기기만 한다. */}
           <div
             hidden={view.sourceMode}
-            className="mx-auto min-h-[1000px] w-[816px] max-w-[calc(100%-32px)] border border-chrome-border bg-white px-[72px] py-[72px] shadow-[0_1px_3px_rgba(61,57,41,0.12)]"
+            className="markwiz-paper mx-auto min-h-[1000px] w-[816px] max-w-[calc(100%-32px)] border border-chrome-border bg-white px-[72px] py-[72px] shadow-[0_1px_3px_rgba(61,57,41,0.12)]"
             onMouseDown={(event) => {
               if (event.target === event.currentTarget) editor?.commands.focus('end');
             }}
@@ -126,7 +143,7 @@ export function Editor() {
             <EditorContent editor={editor} />
           </div>
           {/* 타자기 모드에서 문서 끝 줄도 화면 중앙까지 올라올 수 있도록 여백을 둔다. */}
-          {view.typewriterMode && <div aria-hidden style={{ height: '50vh' }} />}
+          {view.typewriterMode && <div aria-hidden className="markwiz-typewriter-spacer" style={{ height: '50vh' }} />}
         </main>
       </div>
       {view.insert && editor && (

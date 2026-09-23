@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Markwiz",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "identifier": "com.objectworld.markwiz",
   "build": {
     "frontendDist": "../dist",
@@ -34,8 +34,25 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown"],
+        "name": "Markdown Document",
+        "description": "Markdown Document",
+        "mimeType": "text/markdown",
+        "role": "Editor"
+      }
+    ],
     "android": {
       "debugApplicationIdSuffix": ".debug"
+    },
+    "windows": {
+      "nsis": {
+        "template": "nsis/installer.nsi"
+      },
+      "wix": {
+        "template": "msi/main.wxs"
+      }
     }
   }
 }

@@ -140,6 +140,7 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   (`toggleSidebar`/`outline`이 같은 패널을 토글), 소스 모드는 textarea 편집 후 끌 때 파싱해 반영한다.
   에디터에 포커스가 없어도 view 단축키가 먹도록 `Editor.tsx`에 window keydown 리스너가 있다(`defaultPrevented`면 건너뜀).
 - **메뉴**: 리본과 같은 그룹/항목(파일 / 편집 / 글꼴 / 단락 / 삽입 / 다이어그램 / 보기) + 끝에 **도움말**(README 보기).
+  단, 리본의 "내보내기" 그룹은 메뉴에서 최상위가 아니라 **파일 > 내보내기 서브메뉴**다(`EXPORT_MENU_TEXT`, 같은 `exportActions`를 재사용).
   `src/menu/menuModel.ts`가 `ribbonActions.ts`에서 모델을 만들고(리본에 항목을 추가하면 메뉴에도 자동 반영),
   Windows/Linux 데스크탑은 앱 안 `MenuBar`(툴바와 같은 `chrome` 색)로, macOS는 네이티브 메뉴(`platform/desktop/menu.ts`)로 그린다.
   Windows 네이티브 메뉴 바는 OS가 흰색으로 그려 색을 바꿀 수 없어서 앱 안 메뉴 바로 바꿨다(Alt+문자 니모닉은 없음).
@@ -152,6 +153,30 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   `rememberFile`이 하며, **`PlatformAPI.openFileAt`이 있는 플랫폼(데스크탑)에서만** 기록한다(웹의 "경로"는 파일명일 뿐이라). 여는 함수는
   `fileCommands.openRecentFile` — 열기 실패 시 목록에서 빼고 `showNotice`(상태바 안내)로 알린다. 경로 비교는 윈도우 경로면 대소문자/`\`·`/` 무시.
   레지스트리 커맨드가 아니라 메뉴 항목의 `run` 클로저다(경로 인자가 필요하고 단축키가 없어서)
+- **`.md`/`.markdown` 파일 연결**: `tauri.conf.json`의 `bundle.fileAssociations`(NSIS/MSI가 설치 시 등록; `markwiz.exe` 단독 실행에는
+  적용 안 됨). `description`은 반드시 ASCII만 쓴다 — WiX(MSI)의 기본 코드페이지(1252)가 한글을 못 담아 `light.exe`가
+  `LGHT0311`로 조용히 실패한다(에러 메시지 자체는 상세하되 기본 `pnpm tauri build` 로그엔 안 보임, `--verbose` 필요).
+  실행 파일이 파일 경로를 인자로 받았을 때 실제로 그 문서를 여는 것은 별도 배선: Rust `lib.rs`가 `tauri-plugin-single-instance`를
+  **맨 처음** 플러그인으로 등록(두 번째 실행이 인자를 콜백으로 넘기고 새 창 없이 종료 — 이 창 포커스 로직도 여기서),
+  최초 실행 인자는 `StartupFile` managed state에 담아 `take_startup_file` 커맨드로 한 번만 꺼내 간다.
+  프런트는 `platform/desktop/startupFile.ts`가 마운트 시 `take_startup_file`을 부르고 `open-file` 이벤트(2차 실행분)를 구독,
+  두 경로 모두 `fileCommands.openRecentFile`로 위임해 최근 파일 기록/실패 처리 로직을 그대로 재사용한다.
+  **연결 확인 체크박스 — NSIS**: 원본 템플릿(tauri-cli-v2.11.4, `gh api repos/tauri-apps/tauri/contents/...`로 받음)은 확인 없이
+  무조건 연결한다. `src-tauri/nsis/installer.nsi`에 커스텀 페이지(`Var AssociateFiles` + `Page custom PageFileAssociation …`,
+  StartMenu 페이지와 Install 페이지 사이, `{{#if file_associations}}`로 감쌈)를 추가하고 `bundle.windows.nsis.template`으로 연결했다.
+  `.onInit`에서 `$AssociateFiles`를 기본 체크(`BST_CHECKED`)로 초기화해야 한다 — 안 하면 무인 설치(`/P`, 이 페이지가
+  `SkipIfPassive`로 생략됨)에서 값이 빈 문자열로 남아 연결이 전혀 안 된다(이전 버전 대비 회귀). 새 LangString(`mwAssocQuestion` 등)은
+  `${LANG_ENGLISH}`에만 정의(현재 `languages` 기본값이 `["English"]`라서) — 언어를 늘리면 여기도 추가해야 한다.
+  **연결 확인 체크박스 — MSI(WiX)**: 같은 방식으로 `tauri-cli-v2.11.4`의 원본 `main.wxs`를 받아 `src-tauri/msi/main.wxs`로
+  커스터마이징하고 `bundle.windows.wix.template`으로 연결했다. `ASSOCIATEMD` Property(기본값 `"1"`)를 만들고, `WixUI_InstallDir`의
+  InstallDirDlg/VerifyReadyDlg 사이에 체크박스가 있는 `FileAssocDlg`를 끼워 넣었다(같은 파일에 이미 있던 라이선스
+  건너뛰기 블록처럼, 기본 `Publish` 규칙을 더 높은 `Order`로 덮어쓰는 방식). **파일 연결 항목은 실행 파일(`Path`)
+  컴포넌트에서 분리한 별도 `FileAssociations` 컴포넌트**에 두고 `<Condition>ASSOCIATEMD</Condition>`을 건다 — 안 그러면 체크
+  해제 시 실행 파일 자체가 설치되지 않는다. 또한 원본의 `ProgId Advertise="yes"`/`Extension Advertise="yes"` 방식은 그
+  컴포넌트의 키패스가 반드시 File이어야 한다는 WiX 제약(ICE19)이 있어 조건부 컴포넌트에 못 쓰므로, 같은 효과를 내는
+  일반 `RegistryKey`/`RegistryValue`(`HKCR`, perMachine 설치에서 `HKLM\Software\Classes`로 매핑됨)로 직접 썼다.
+  MSI는 무인 설치(`/qn`, `/qb`)에서 UI 시퀀스 자체를 건너뛰므로 NSIS와 달리 별도 스킵 처리가 필요 없다(Property 기본값이
+  그대로 적용됨)
 - **도움말**: `HelpDialog`가 `README.md?raw`를 읽기 전용 에디터로 보여준다. 사용자 문서와 별개 인스턴스이며
   `commandKeymap`/`focusLineDecoration`을 뺀다(넣으면 Ctrl+S가 README를 저장함). raw HTML 배너는 제거하고 이미지 경로를 번들 URL로 바꾼다
 - **도움말 > Markwiz 정보**(`AboutDialog`): 버전은 `src/appInfo.ts`가 package.json에서 읽고, 소개글·라이선스도 그 파일에 둔다.
@@ -160,8 +185,8 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(160개), `pnpm test`
-- 현재 버전 **0.1.1**(2026-09-23). 이전: 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(201개) + Rust `cargo test`(3개), `pnpm test`
+- 현재 버전 **0.1.2**(2026-09-23). 이전: 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
   함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)
 
@@ -198,6 +223,27 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   도메인으로 오해하지 않게)로 바꿔 저장한다. 상위 폴더/다른 곳/저장 전 문서는 절대 `file://` 유지. 화면 표시는 `resolveDisplaySrc(src, 문서경로)`가
   상대 경로를 문서 폴더 기준으로 풀어 asset URL로 바꾼다 — 그래서 `file.open`은 **문서 경로를 먼저 갱신한 뒤** 내용을 넣어야 한다(순서 바꾸지 말 것).
   Save As로 폴더가 바뀌어도 기존 상대 경로는 재작성하지 않는다 외부 `http:` 이미지도 보이도록 `img-src`에 `http:`를 허용했다
+- **PDF/Word 내보내기**(`src/export/`, 툴바·메뉴의 "내보내기" 그룹). `insert.*`처럼 레지스트리 커맨드가 아니라 `ribbonActions.ts`의
+  `run` 클로저다(단축키 없는 단발성 동작).
+  - **PDF**(`exportPdf.ts`): 별도 라이브러리 없이 `window.print()`. 소스 코드 모드면 `view.sourceMode` 커맨드로 먼저 미리보기로
+    돌아가고(파싱 실패 시 `showNotice`로 알리고 인쇄하지 않음), 화면 구성은 `editor.css`의 `@media print`가 담당한다
+    (메뉴/툴바/사이드바/상태바/raw 마커 숨김, 다이어그램은 토글 상태와 무관하게 항상 `.markwiz-diagram-preview` 강제 표시).
+  - **Word**(`exportDocx.ts` + `docxConvert.ts`): `docx` 패키지로 문서 트리를 직접 `.docx`로 변환한다(마크다운 재파싱이 아니라
+    ProseMirror 노드를 그대로 순회). **PlantUML처럼 무거워서 동적 `import('docx')`로만 쓴다** — `docxConvert.ts`는 `docx`를
+    정적으로 import하지 않고 `DocxLib`(`typeof import('docx')`) 타입 값을 `ConvertContext.docx`로 주입받는다(정적 import 시
+    웹 번들에 `docx` 전체가 섞여 들어감). 목록은 문서 안에서 서로 다른 목록이 번호를 이어받지 않도록 최상위 목록마다
+    새 numbering reference를 만들고(`allocateListRef`), 중첩 하위 목록은 부모 reference를 그대로 물려받는다 — 이렇게 안 하면
+    docx 라이브러리가 같은 reference의 카운터를 문서 전체에서 공유해 버린다. 체크박스 목록은 네이티브 numbering을 안 쓰고
+    `☐`/`☑` 글자를 붙인다. 각주는 `Document({ footnotes })` + `FootnoteReferenceRun`으로 진짜 Word 각주가 된다.
+    이미지/다이어그램은 **이미 화면에 렌더링된 DOM에서 캔버스로 래스터화**한다(`collectImages.ts` + `rasterize.ts`) —
+    `editor.view.nodeDOM(pos)`로 그 노드의 실제 DOM을 찾아(문서 위치 기반이라 다이어그램 오류/미렌더링으로 svg가
+    없는 블록이 섞여도 순서가 어긋나지 않는다) 이미지는 캔버스 `drawImage`+`toDataURL`, 다이어그램은 svg를
+    `data:image/svg+xml`로 만든 `Image`를 캔버스에 그려 PNG로 만든다(비동기 — 이미지 수집은 트리 생성 전에 먼저 끝낸다).
+    두 번째 네트워크 요청이 없어 CSP `connect-src`와 무관하고 `file://`/`asset://`/`data:` 이미지는 항상 되지만,
+    CORS를 안 여는 외부 `https:` 이미지는 캔버스가 오염돼(`SecurityError`) 읽을 수 없다 — 이 경우 텍스트 대체로 내려간다.
+  - 이진 파일 저장을 위해 `PlatformAPI.saveBinaryFileAs`를 추가했다(데스크탑: `writeFile`, `fs:allow-write-file` 권한 필요;
+    웹: Blob 다운로드). 테스트는 `docx`가 실제로 만든 `.docx`(zip)를 `jszip`(devDependency, 프로덕션 번들에는 안 들어감)으로
+    열어 `word/document.xml`/`footnotes.xml`/`numbering.xml` 내용을 검사한다(마크다운 round-trip 테스트와 같은 취지)
 
 ## 빌드 / 배포
 - 개발 `pnpm dev`, 웹 빌드 `pnpm build`, 데스크탑 `pnpm tauri build` (Tauri v2, Rust + MSVC Build Tools 필요 — 설치됨)

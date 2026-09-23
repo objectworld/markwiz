@@ -2,6 +2,8 @@ import type { Editor } from '@tiptap/core';
 import {
   Bold,
   Code,
+  FileOutput,
+  FileType2,
   Focus,
   FileCode,
   FilePlus,
@@ -31,6 +33,8 @@ import {
 import type { CommandId } from '../commands/commandIds';
 import { executeCommand } from '../commands/registry';
 import { getViewState } from '../commands/viewState';
+import { exportDocx } from '../export/exportDocx';
+import { exportPdf } from '../export/exportPdf';
 
 export interface RibbonAction {
   id: string;
@@ -138,6 +142,13 @@ export const insertActions: RibbonAction[] = [
 export const diagramActions: RibbonAction[] = [
   { id: 'insert.mermaid', label: 'Mermaid', icon: Workflow, run: (editor) => insertDiagram(editor, 'mermaid') },
   { id: 'insert.plantuml', label: 'PlantUML', icon: Waypoints, run: (editor) => insertDiagram(editor, 'plantuml') },
+];
+
+// PDF는 브라우저/웹뷰 인쇄 기능을 그대로 쓰고, Word는 문서 트리를 직접 .docx로 변환한다(둘 다
+// src/export/). 단축키가 없는 단발성 동작이라 레지스트리 커맨드로 만들지 않는다(insert.* 그룹과 동일한 방식).
+export const exportActions: RibbonAction[] = [
+  { id: 'export.pdf', label: 'PDF로 내보내기', icon: FileOutput, run: (editor) => exportPdf(editor) },
+  { id: 'export.docx', label: 'Word로 내보내기', icon: FileType2, run: (editor) => void exportDocx(editor) },
 ];
 
 // 보기 그룹의 토글 상태는 에디터가 아니라 viewState가 소유한다.

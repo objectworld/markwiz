@@ -1,8 +1,9 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { readTextFile, writeFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { pathToFileUrl } from '../localFile';
 import {
   basename,
+  type BinaryFileFilter,
   type LocalFileKind,
   type OpenedDocument,
   type PickedFile,
@@ -45,6 +46,14 @@ export const desktopPlatform: PlatformAPI = {
     if (!path) return null;
 
     await writeTextFile(path, content);
+    return { path, name: basename(path) };
+  },
+
+  async saveBinaryFileAs(data: Uint8Array, suggestedName: string, filter: BinaryFileFilter): Promise<SavedDocument | null> {
+    const path = await save({ defaultPath: suggestedName, filters: [filter] });
+    if (!path) return null;
+
+    await writeFile(path, data);
     return { path, name: basename(path) };
   },
 };

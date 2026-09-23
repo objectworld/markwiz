@@ -26,6 +26,7 @@ beforeEach(() => {
     openFile: vi.fn(),
     saveFile: vi.fn(),
     saveFileAs: vi.fn(),
+    saveBinaryFileAs: vi.fn(),
   };
 });
 

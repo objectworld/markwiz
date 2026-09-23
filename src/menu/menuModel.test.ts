@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadKeymap } from '../commands/keymap';
-import { diagramActions, fontActions, historyActions, insertActions, paragraphActions, viewActions } from '../ribbon/ribbonActions';
-import { buildMenuModel } from './menuModel';
+import { diagramActions, exportActions, fontActions, historyActions, insertActions, paragraphActions, viewActions } from '../ribbon/ribbonActions';
+import { buildMenuModel, EXPORT_MENU_TEXT, RECENT_MENU_TEXT } from './menuModel';
 
 const model = buildMenuModel(loadKeymap());
 const group = (text: string) => model.find((candidate) => candidate.text === text)!;
@@ -37,10 +37,21 @@ describe('native menu model', () => {
   });
 });
 
+describe('파일 > 내보내기', () => {
+  it('is a submenu of the file menu (not a top-level menu) with the same items as the ribbon export group', () => {
+    const file = buildMenuModel(loadKeymap())[0];
+    const submenu = file.entries.find((entry) => entry.kind === 'submenu' && entry.text === EXPORT_MENU_TEXT);
+    expect(submenu && submenu.kind === 'submenu' && submenu.entries.map((entry) => (entry.kind === 'item' ? entry.text : entry.kind))).toEqual(
+      exportActions.map((action) => action.label),
+    );
+    expect(buildMenuModel(loadKeymap()).some((candidate) => candidate.text === EXPORT_MENU_TEXT)).toBe(false);
+  });
+});
+
 describe('파일 > 최근에 연 파일', () => {
   const recentFiles = Array.from({ length: 10 }, (_, i) => ({ path: `C:\\docs\\note${i}.md`, name: `note${i}.md` }));
   const submenuOf = (groups: ReturnType<typeof buildMenuModel>) => {
-    const entry = groups[0].entries.find((candidate) => candidate.kind === 'submenu');
+    const entry = groups[0].entries.find((candidate) => candidate.kind === 'submenu' && candidate.text === RECENT_MENU_TEXT);
     if (!entry || entry.kind !== 'submenu') throw new Error('no submenu');
     return entry;
   };
@@ -48,8 +59,7 @@ describe('파일 > 최근에 연 파일', () => {
   it('is a submenu of the file menu, after a separator that follows the file commands', () => {
     const file = buildMenuModel(loadKeymap(), recentFiles)[0];
     expect(file.text).toBe('파일');
-    const kinds = file.entries.map((entry) => entry.kind);
-    expect(kinds.slice(-2)).toEqual(['separator', 'submenu']);
+    expect(file.entries[file.entries.length - 1]).toMatchObject({ kind: 'submenu', text: '최근에 연 파일' });
     expect(submenuOf(buildMenuModel(loadKeymap())).text).toBe('최근에 연 파일');
   });
 

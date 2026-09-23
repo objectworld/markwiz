@@ -228,3 +228,50 @@
 .markwiz-focus-mode .ProseMirror > .markwiz-current-block {
   opacity: 1;
 }
+
+/* PDF 내보내기(window.print()): 화면 크롬(메뉴/툴바/사이드바/상태바)을 숨기고 문서만 인쇄한다.
+   다이어그램은 현재 토글 상태와 무관하게 항상 미리보기(그림)로, raw 마크업 표시는 항상 숨긴다. */
+@media print {
+  header[aria-label='리본'],
+  [role='menubar'],
+  aside[aria-label='사이드바'],
+  footer[aria-label='상태 표시줄'],
+  .markwiz-diagram-toggle,
+  .markwiz-raw-marker,
+  .markwiz-typewriter-spacer {
+    display: none !important;
+  }
+
+  .markwiz-diagram-source {
+    display: none !important;
+  }
+
+  .markwiz-diagram-preview {
+    display: flex !important;
+  }
+
+  .markwiz-focus-mode .ProseMirror > * {
+    opacity: 1 !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  main {
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+
+  .markwiz-paper {
+    width: auto !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
