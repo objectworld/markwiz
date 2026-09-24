@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { executeCommand } from '../commands/registry';
 import { useViewState } from '../commands/viewState';
+import { t, useLanguage } from '../i18n/i18n';
 import { RibbonButton } from './RibbonButton';
 import {
   activeStyleValue,
@@ -14,6 +15,7 @@ import {
   insertActions,
   paragraphActions,
   STYLE_OPTIONS,
+  styleOptionLabel,
   viewActions,
   type RibbonAction,
 } from './ribbonActions';
@@ -63,6 +65,8 @@ export function Ribbon({ editor }: { editor: Editor | null }) {
   const state = useRibbonState(editor);
   // 보기 토글은 에디터 트랜잭션과 무관하게 바뀌므로 viewState를 구독해 다시 그린다.
   useViewState();
+  // 언어가 바뀌면 버튼 이름/툴팁을 다시 그린다.
+  useLanguage();
 
   const renderButtons = (actions: RibbonAction[]) =>
     actions.map((action) => (
@@ -76,13 +80,13 @@ export function Ribbon({ editor }: { editor: Editor | null }) {
     ));
 
   return (
-    <header className="select-none" aria-label="리본">
-      <div className="flex h-[76px] overflow-x-auto border-b border-chrome-border bg-chrome px-1 [scrollbar-color:rgba(61,57,41,0.35)_transparent] [scrollbar-width:thin]" role="toolbar" aria-label="서식 도구 모음">
-        <RibbonGroup label="파일">{renderButtons(fileActions)}</RibbonGroup>
-        <RibbonGroup label="편집">{renderButtons(historyActions)}</RibbonGroup>
-        <RibbonGroup label="글꼴">
+    <header className="select-none" aria-label={t('ribbon.aria')}>
+      <div className="flex h-[76px] overflow-x-auto border-b border-chrome-border bg-chrome px-1 [scrollbar-color:rgba(61,57,41,0.35)_transparent] [scrollbar-width:thin]" role="toolbar" aria-label={t('ribbon.toolbarAria')}>
+        <RibbonGroup label={t('group.file')}>{renderButtons(fileActions)}</RibbonGroup>
+        <RibbonGroup label={t('group.edit')}>{renderButtons(historyActions)}</RibbonGroup>
+        <RibbonGroup label={t('group.font')}>
           <select
-            aria-label="스타일"
+            aria-label={t('ribbon.styleAria')}
             value={state?.style ?? 'p'}
             disabled={!editor}
             onChange={(event) => {
@@ -93,17 +97,17 @@ export function Ribbon({ editor }: { editor: Editor | null }) {
           >
             {STYLE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {styleOptionLabel(option)}
               </option>
             ))}
           </select>
           {renderButtons(fontActions)}
         </RibbonGroup>
-        <RibbonGroup label="단락">{renderButtons(paragraphActions)}</RibbonGroup>
-        <RibbonGroup label="삽입">{renderButtons(insertActions)}</RibbonGroup>
-        <RibbonGroup label="다이어그램">{renderButtons(diagramActions)}</RibbonGroup>
-        <RibbonGroup label="내보내기">{renderButtons(exportActions)}</RibbonGroup>
-        <RibbonGroup label="보기">{renderButtons(viewActions)}</RibbonGroup>
+        <RibbonGroup label={t('group.paragraph')}>{renderButtons(paragraphActions)}</RibbonGroup>
+        <RibbonGroup label={t('group.insert')}>{renderButtons(insertActions)}</RibbonGroup>
+        <RibbonGroup label={t('group.diagram')}>{renderButtons(diagramActions)}</RibbonGroup>
+        <RibbonGroup label={t('group.export')}>{renderButtons(exportActions)}</RibbonGroup>
+        <RibbonGroup label={t('group.view')}>{renderButtons(viewActions)}</RibbonGroup>
       </div>
     </header>
   );

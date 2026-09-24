@@ -7,6 +7,7 @@ import { executeCommand } from '../commands/registry';
 import { matchesShortcut } from '../commands/shortcutFormat';
 import { useDocumentState } from '../commands/useDocumentState';
 import { getViewState, setViewState, useViewState } from '../commands/viewState';
+import { t, useLanguage } from '../i18n/i18n';
 import { AboutDialog } from '../menu/AboutDialog';
 import { HelpDialog } from '../menu/HelpDialog';
 import { MenuBar } from '../menu/MenuBar';
@@ -27,20 +28,35 @@ const APP_COMMAND_IDS = COMMAND_IDS.filter(
 // OS가 그리는 메뉴 바는 색을 바꿀 수 없어, macOS(화면 맨 위 메뉴)를 뺀 데스크탑은 앱 안 메뉴 바를 쓴다.
 const USE_IN_APP_MENU = isTauri() && detectPlatform() !== 'mac';
 
-const initialContent = `
-  <h1>Markwiz</h1>
-  <p>여기에 마크다운을 입력하세요. <strong>굵게</strong>, <em>기울임</em> 같은 기본 서식을 지원합니다.</p>
-`;
-
 export function Editor() {
   const editor = useEditor({
     extensions: editorExtensions,
-    content: initialContent,
+    content: t('editor.initialContent'),
     immediatelyRender: false,
   });
   const document = useDocumentState();
   const view = useViewState();
   const scrollRef = useRef<HTMLElement>(null);
+  const language = useLanguage();
+
+  // 설치 프로그램에서 고른 언어를 기본 언어로 적용한다(사용자가 직접 고른 언어가 없을 때만).
+  useEffect(() => {
+    if (!isTauri()) return;
+    void import('../platform/desktop/installerLanguage').then((m) => m.applyInstallerLanguage()).catch((error: unknown) => {
+      console.error('[markwiz] failed to read the installer language', error);
+    });
+  }, []);
+
+  // 아직 손대지 않은 시작 문서(안내 문구)는 언어가 바뀌면 그 언어의 안내 문구로 바꾼다. 직접 고친 문서는 건드리지 않는다.
+  const pristineHtml = useRef<string | null>(null);
+  useEffect(() => {
+    if (!editor) return;
+    if (pristineHtml.current !== null && editor.getHTML() === pristineHtml.current) {
+      editor.commands.setContent(t('editor.initialContent'), { emitUpdate: false });
+    }
+    pristineHtml.current = editor.getHTML();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, language]);
 
   // 에디터에 포커스가 없을 때(소스 모드 textarea, 웹, 앱 안 메뉴 바 사용 시)도 파일/보기 단축키가 동작하도록 한다.
   // 에디터가 이미 처리한 키(defaultPrevented)는 건너뛰어 두 번 실행되지 않게 한다.

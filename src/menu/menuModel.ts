@@ -5,6 +5,7 @@ import { clearRecentFiles, folderOf, type RecentFile } from '../commands/recentF
 import { executeCommand } from '../commands/registry';
 import { toTauriAccelerator } from '../commands/shortcutFormat';
 import { setViewState } from '../commands/viewState';
+import { getLanguage, LANGUAGES, setLanguage, t } from '../i18n/i18n';
 import {
   diagramActions,
   exportActions,
@@ -13,7 +14,9 @@ import {
   historyActions,
   insertActions,
   paragraphActions,
+  actionLabel,
   STYLE_OPTIONS,
+  styleOptionLabel,
   viewActions,
   type RibbonAction,
 } from '../ribbon/ribbonActions';
@@ -31,6 +34,8 @@ export type MenuEntry =
       detail?: string;
       title?: string;
       disabled?: boolean;
+      // 값이 있으면 체크 표시가 붙는 항목(예: 현재 언어)
+      checked?: boolean;
       run: (editor: Editor) => void;
     }
   | { kind: 'separator' }
@@ -51,27 +56,28 @@ function toEntry(action: RibbonAction, keymap: KeymapConfig): MenuEntry {
   return {
     kind: 'item',
     id: action.id,
-    text: action.label,
+    text: actionLabel(action),
     shortcut: combo,
     accelerator: combo && native ? toTauriAccelerator(combo) : undefined,
     run: action.run,
   };
 }
 
-export const RECENT_MENU_TEXT = '최근에 연 파일';
-export const EXPORT_MENU_TEXT = '내보내기';
+// 서브메뉴 이름은 언어에 따라 달라지므로 상수가 아니라 호출 시점의 언어로 만든다.
+export const recentMenuText = (): string => t('menu.recent');
+export const exportMenuText = (): string => t('menu.export');
 
 function recentFilesSubmenu(files: readonly RecentFile[]): MenuEntry {
   if (files.length === 0) {
     return {
       kind: 'submenu',
-      text: RECENT_MENU_TEXT,
-      entries: [{ kind: 'item', id: 'recent.empty', text: '(최근 파일 없음)', disabled: true, run: () => undefined }],
+      text: recentMenuText(),
+      entries: [{ kind: 'item', id: 'recent.empty', text: t('menu.recentEmpty'), disabled: true, run: () => undefined }],
     };
   }
   return {
     kind: 'submenu',
-    text: RECENT_MENU_TEXT,
+    text: recentMenuText(),
     entries: [
       ...files.map(
         (file): MenuEntry => ({
@@ -84,7 +90,7 @@ function recentFilesSubmenu(files: readonly RecentFile[]): MenuEntry {
         }),
       ),
       { kind: 'separator' },
-      { kind: 'item', id: 'recent.clear', text: '목록 지우기', run: () => clearRecentFiles() },
+      { kind: 'item', id: 'recent.clear', text: t('menu.recentClear'), run: () => clearRecentFiles() },
     ],
   };
 }
@@ -94,26 +100,26 @@ export function buildMenuModel(keymap: KeymapConfig, recentFiles: readonly Recen
 
   return [
     {
-      text: '파일',
+      text: t('group.file'),
       entries: [
         ...entries(fileActions),
         { kind: 'separator' },
         // 리본에서는 별도 "내보내기" 그룹이지만, 메뉴에서는 Typora처럼 파일 메뉴의 서브메뉴다.
-        { kind: 'submenu', text: EXPORT_MENU_TEXT, entries: entries(exportActions) },
+        { kind: 'submenu', text: exportMenuText(), entries: entries(exportActions) },
         recentFilesSubmenu(recentFiles),
       ],
     },
-    { text: '편집', entries: entries(historyActions) },
+    { text: t('group.edit'), entries: entries(historyActions) },
     {
-      text: '글꼴',
+      text: t('group.font'),
       entries: [
         {
           kind: 'submenu',
-          text: '스타일',
+          text: t('menu.style'),
           entries: STYLE_OPTIONS.map((option) => ({
             kind: 'item',
             id: option.command,
-            text: option.label,
+            text: styleOptionLabel(option),
             run: (editor: Editor) => void executeCommand(option.command, editor),
           })),
         },
@@ -121,16 +127,31 @@ export function buildMenuModel(keymap: KeymapConfig, recentFiles: readonly Recen
         ...entries(fontActions),
       ],
     },
-    { text: '단락', entries: entries(paragraphActions) },
-    { text: '삽입', entries: entries(insertActions) },
-    { text: '다이어그램', entries: entries(diagramActions) },
-    { text: '보기', entries: entries(viewActions) },
+    { text: t('group.paragraph'), entries: entries(paragraphActions) },
+    { text: t('group.insert'), entries: entries(insertActions) },
+    { text: t('group.diagram'), entries: entries(diagramActions) },
+    { text: t('group.view'), entries: entries(viewActions) },
     {
-      text: '도움말',
+      text: t('group.help'),
       entries: [
-        { kind: 'item', id: 'help.readme', text: 'README 보기', run: () => setViewState({ help: true }) },
+        { kind: 'item', id: 'help.readme', text: t('menu.readme'), run: () => setViewState({ help: true }) },
         { kind: 'separator' },
-        { kind: 'item', id: 'help.about', text: 'Markwiz 정보', run: () => setViewState({ about: true }) },
+        // 항목 이름은 항상 그 언어 자신의 이름으로 적어야, 잘못 바뀐 언어에서도 되돌릴 수 있다.
+        {
+          kind: 'submenu',
+          text: t('menu.language'),
+          entries: LANGUAGES.map(
+            (language): MenuEntry => ({
+              kind: 'item',
+              id: `language.${language.id}`,
+              text: language.label,
+              checked: getLanguage() === language.id,
+              run: () => setLanguage(language.id),
+            }),
+          ),
+        },
+        { kind: 'separator' },
+        { kind: 'item', id: 'help.about', text: t('menu.about'), run: () => setViewState({ about: true }) },
       ],
     },
   ];

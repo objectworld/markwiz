@@ -166,7 +166,7 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   StartMenu 페이지와 Install 페이지 사이, `{{#if file_associations}}`로 감쌈)를 추가하고 `bundle.windows.nsis.template`으로 연결했다.
   `.onInit`에서 `$AssociateFiles`를 기본 체크(`BST_CHECKED`)로 초기화해야 한다 — 안 하면 무인 설치(`/P`, 이 페이지가
   `SkipIfPassive`로 생략됨)에서 값이 빈 문자열로 남아 연결이 전혀 안 된다(이전 버전 대비 회귀). 새 LangString(`mwAssocQuestion` 등)은
-  `${LANG_ENGLISH}`에만 정의(현재 `languages` 기본값이 `["English"]`라서) — 언어를 늘리면 여기도 추가해야 한다.
+  `${LANG_ENGLISH}`와 `${LANG_KOREAN}` 둘 다 정의한다 — `languages`에 언어를 늘리면 여기도 추가해야 한다.
   **연결 확인 체크박스 — MSI(WiX)**: 같은 방식으로 `tauri-cli-v2.11.4`의 원본 `main.wxs`를 받아 `src-tauri/msi/main.wxs`로
   커스터마이징하고 `bundle.windows.wix.template`으로 연결했다. `ASSOCIATEMD` Property(기본값 `"1"`)를 만들고, `WixUI_InstallDir`의
   InstallDirDlg/VerifyReadyDlg 사이에 체크박스가 있는 `FileAssocDlg`를 끼워 넣었다(같은 파일에 이미 있던 라이선스
@@ -179,13 +179,32 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   그대로 적용됨)
 - **도움말**: `HelpDialog`가 `README.md?raw`를 읽기 전용 에디터로 보여준다. 사용자 문서와 별개 인스턴스이며
   `commandKeymap`/`focusLineDecoration`을 뺀다(넣으면 Ctrl+S가 README를 저장함). raw HTML 배너는 제거하고 이미지 경로를 번들 URL로 바꾼다
+  README.md/README.en.md 둘 다 `?raw`로 들어 있고, **README 안의 링크는 창 안에서 처리**한다(`onClickCapture`): `README.en.md`/`README.md`는 언어 전환,
+  `#앵커`는 GitHub 규칙(`slugifyHeading`)으로 제목을 찾아 스크롤, 그 밖의 상대 경로는 `preventDefault`만 한다 — 안 막으면 웹뷰가 앱 화면을
+  없는 경로로 이동시켜 버린다. `https:` 등 절대 주소는 건드리지 않는다. 참고: 인라인 코드 서식 안의 링크(`` [`CLAUDE.md`](CLAUDE.md) ``)는
+  Tiptap code 마크가 다른 마크를 배제해 링크로 남지 않는다
 - **도움말 > Markwiz 정보**(`AboutDialog`): 버전은 `src/appInfo.ts`가 package.json에서 읽고, 소개글·라이선스도 그 파일에 둔다.
   `appInfo.test.ts`가 package.json / Cargo.toml / tauri.conf.json 버전이 같은지 검사한다
 - 창 제목(파일명)은 `document.title`로는 Tauri 창에 반영되지 않아 `platform/desktop/windowTitle.ts`가 창 API로 설정한다
+- **다국어(ko/en)**: 라이브러리 없이 `src/i18n/`(`messages.ts` 사전 + `i18n.ts`). 사용자에게 보이는 문자열은 **하드코딩하지 말고**
+  `messages.ts`에 키를 추가해 `t()`(React 밖) 또는 `useLanguage()`+`t()`(컴포넌트, 언어 바뀌면 재렌더)로 쓴다. `en`은
+  `Record<MessageKey, string>`이라 `ko`에 키를 추가하고 `en`에 빠뜨리면 타입 에러가 난다. 리본 항목은 `label`이 아니라 `labelKey`
+  (`actionLabel()`로 렌더 시점에 해석)이고 메뉴 모델은 `buildMenuModel` 호출 시점에 `t()`를 부르므로 `MenuBar`/네이티브 메뉴는 언어
+  구독으로 다시 만든다. 새 언어는 `messages.ts` 사전 + `LANGUAGES` + (설치 프로그램은) NSIS `languages`/LangString, WiX `wix.language`+`.wxl`.
+  **언어 우선순위**: 사용자가 도움말 > 언어에서 고른 값(`markwiz:language`) > 설치 프로그램 언어 > 브라우저/OS 언어.
+  설치 프로그램 언어는 레지스트리 `HKCU\Software\objectworld\Markwiz`의 `Installer Language`(Windows LCID: 1042 한국어, 1033 영어)에
+  NSIS(Tauri 기본 템플릿)와 MSI(우리 `main.wxs`가 `!(loc.TauriLanguage)`로 기록)가 쓰고, Rust `installer_language` 커맨드가 `reg query`로
+  읽어 `platform/desktop/installerLanguage.ts`가 `persist:false`로 적용한다(저장하지 않아야 이후 사용자가 직접 고르기 전까진 설치 언어를 따름).
+  WiX는 실행 중 언어 전환이 안 돼 **언어마다 MSI가 따로** 나온다(`Markwiz_<ver>_x64_ko-KR.msi`/`_en-US.msi`, 한국어는 코드페이지 949라
+  MSI 안에 한글이 들어가도 된다 — 단 `fileAssociations.description`은 en-US 빌드가 1252라 여전히 ASCII). 예제 문서(`editor.initialContent`)는
+  사용자가 손대기 전(`pristineHtml`)이면 언어 전환에 맞춰 교체된다. 테스트는 한국어 UI를 가정하므로 `src/test/setup.ts`가 매번 `ko`로 되돌린다.
+  웹에는 메뉴 바가 없어 언어 전환 UI가 없다(브라우저 언어만 따름). macOS 네이티브 메뉴의 체크 항목/재구성은 코드만 작성했고 실행 검증은 못 했다.
+  NSIS 설치 프로그램은 내용이 압축돼 있어 빌드 후 문자열을 검색해 검증할 수 없다(빌드 성공까지만 확인). MSI는 `dark.exe`
+  (`%LOCALAPPDATA%\tauri\WixTools314`)로 풀어 대화상자 문자열과 `Installer Language` 값을 확인했다
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(201개) + Rust `cargo test`(3개), `pnpm test`
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(227개) + Rust `cargo test`(5개), `pnpm test`
 - 현재 버전 **0.1.2**(2026-09-23). 이전: 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
   함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)

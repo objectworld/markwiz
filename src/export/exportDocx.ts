@@ -1,6 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import { getDocumentState } from '../commands/documentState';
 import { showNotice } from '../commands/viewState';
+import { t } from '../i18n/i18n';
 import { getPlatform } from '../platform';
 import { collectRasterImages } from './collectImages';
 import { convertDocument, createConvertContext } from './docxConvert';
@@ -30,5 +31,5 @@ export async function exportDocx(editor: Editor): Promise<void> {
 
   const platform = await getPlatform();
   const saved = await platform.saveBinaryFileAs(bytes, suggestedDocxName(), DOCX_FILTER);
-  if (saved) showNotice(`Word 파일로 내보냈습니다: ${saved.name}`);
+  if (saved) showNotice(t('notice.docxSaved', { name: saved.name }));
 }

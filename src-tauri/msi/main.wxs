@@ -124,9 +124,9 @@
                 <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
                 <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
-                <Control Id="Title" Type="Text" X="15" Y="6" Width="300" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}File Associations" />
-                <Control Id="Description" Type="Text" X="25" Y="23" Width="320" Height="15" Transparent="yes" NoPrefix="yes" Text="Choose whether to open Markdown files with {{product_name}}." />
-                <Control Id="AssociateMdCheckBox" Type="CheckBox" X="20" Y="60" Width="330" Height="18" Property="ASSOCIATEMD" CheckBoxValue="1" Text="Open .md and .markdown files with {{product_name}}" />
+                <Control Id="Title" Type="Text" X="15" Y="6" Width="300" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}!(loc.mwAssocTitle)" />
+                <Control Id="Description" Type="Text" X="25" Y="23" Width="320" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.mwAssocDescription)" />
+                <Control Id="AssociateMdCheckBox" Type="CheckBox" X="20" Y="60" Width="330" Height="18" Property="ASSOCIATEMD" CheckBoxValue="1" Text="!(loc.mwAssocCheckbox)" />
             </Dialog>
             <!-- InstallDirDlg의 기본 Next(-> VerifyReadyDlg)/VerifyReadyDlg의 기본 Back(-> InstallDirDlg)을
                  위 unless-license 블록과 같은 방식(더 높은 Order로 덮어쓰기)으로 이 다이얼로그를 거치도록 바꾼다. -->
@@ -173,6 +173,8 @@
             <Component Id="RegistryEntries" Guid="*">
                 <RegistryKey Root="HKCU" Key="Software\\{{manufacturer}}\\{{product_name}}">
                     <RegistryValue Name="InstallDir" Type="string" Value="[INSTALLDIR]" KeyPath="yes" />
+                    <!-- Markwiz: 설치 언어(Windows 로케일 ID, 예: 한국어 1042). 앱이 처음 실행될 때 기본 언어로 읽는다. NSIS도 같은 위치/이름에 기록한다. -->
+                    <RegistryValue Name="Installer Language" Type="string" Value="!(loc.TauriLanguage)" />
                 </RegistryKey>
                 <!-- Change the Root to HKCU for perUser installations -->
                 {{#each deep_link_protocols as |protocol| ~}}

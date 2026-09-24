@@ -501,11 +501,13 @@ FunctionEnd
   !include "{{this}}"
 {{/each}}
 
-; Markwiz: 파일 연결 확인 페이지 문구(custom addition). ${LANG_ENGLISH}은 위 languages 목록(기본값 English)에
-; 항상 포함되므로 이 정의만으로 충분하다 — 다른 언어를 추가하면 여기에도 LangString을 더 넣어야 한다.
+; Markwiz: 파일 연결 확인 페이지 문구(custom addition). tauri.conf.json의 nsis.languages가 ["English", "Korean"]이므로 두 언어를
+; 정의한다 — 언어를 더 추가하면 여기에도 LangString을 더 넣어야 한다(빠지면 그 언어에서 문구가 빈 칸이 된다).
 {{#if file_associations}}
 LangString mwAssocQuestion ${LANG_ENGLISH} "Would you like ${PRODUCTNAME} to open .md and .markdown files by default?"
 LangString mwAssocCheckboxLabel ${LANG_ENGLISH} "Open Markdown files with ${PRODUCTNAME}"
+LangString mwAssocQuestion ${LANG_KOREAN} "${PRODUCTNAME}(으)로 .md 및 .markdown 파일을 기본으로 열도록 설정하시겠습니까?"
+LangString mwAssocCheckboxLabel ${LANG_KOREAN} "Markdown 파일을 ${PRODUCTNAME}(으)로 열기"
 {{/if}}
 
 Function .onInit

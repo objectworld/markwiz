@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/core';
 import { parseMarkdown } from '../markdown/parser';
 import { getPlatform } from '../platform';
 import { basename, type OpenedDocument, type PlatformAPI } from '../platform/types';
+import { t } from '../i18n/i18n';
 import { getDocumentState, setDocumentState } from './documentState';
 import { addRecentFile, removeRecentFile } from './recentFiles';
 import { registerCommand } from './registry';
@@ -48,7 +49,7 @@ export async function openRecentFile(editor: Editor, path: string): Promise<bool
   } catch (error) {
     console.error(`[markwiz] failed to open recent file: ${path}`, error);
     removeRecentFile(path);
-    showNotice(`파일을 열 수 없어 최근 목록에서 뺐습니다: ${basename(path)}`);
+    showNotice(t('notice.recentRemoved', { name: basename(path) }));
     return false;
   }
 

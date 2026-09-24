@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import type { Editor } from '@tiptap/core';
 import { FolderOpen } from 'lucide-react';
 import { getDocumentState } from '../commands/documentState';
+import { t, useLanguage } from '../i18n/i18n';
 import { normalizeUrl, relativizeLocalUrl } from '../platform/localFile';
 import { getPlatform, type LocalFileKind } from '../platform';
 import type { InsertRequest } from '../commands/viewState';
@@ -42,6 +43,7 @@ const BUTTON = 'rounded border border-chrome-border px-3 py-1.5 text-[13px] hove
 
 // 링크/이미지 삽입 창: 인터넷 주소를 입력하거나, 데스크탑 파일을 골라 넣을 수 있다.
 export function InsertDialog({ editor, request, onClose }: { editor: Editor; request: InsertRequest; onClose: () => void }) {
+  useLanguage();
   const isImage = request.kind === 'image';
   const [url, setUrl] = useState(request.url);
   const [text, setText] = useState('');
@@ -84,7 +86,7 @@ export function InsertDialog({ editor, request, onClose }: { editor: Editor; req
     const values = { url, text, alt };
     if (isImage) {
       if (!applyImage(editor, values)) {
-        setError('이미지 주소를 입력하거나 파일을 선택하세요.');
+        setError(t('insert.errorImage'));
         return;
       }
     } else {
@@ -103,37 +105,37 @@ export function InsertDialog({ editor, request, onClose }: { editor: Editor; req
       <form
         role="dialog"
         aria-modal="true"
-        aria-label={isImage ? '이미지 삽입' : '링크 삽입'}
+        aria-label={isImage ? t('insert.imageTitle') : t('insert.linkTitle')}
         onSubmit={submit}
         onKeyDown={(event) => {
           if (event.key === 'Escape') onClose();
         }}
         className="w-[520px] max-w-[calc(100%-32px)] rounded-lg border border-chrome-border bg-white p-5 text-ink shadow-xl"
       >
-        <h2 className="mb-4 text-[15px] font-medium">{isImage ? '이미지 삽입' : '링크 삽입'}</h2>
+        <h2 className="mb-4 text-[15px] font-medium">{isImage ? t('insert.imageTitle') : t('insert.linkTitle')}</h2>
 
         <label className="mb-1 block text-[12px] text-ink-muted" htmlFor="insert-url">
-          {isImage ? '이미지 주소 또는 파일' : '링크 주소 또는 파일'}
+          {isImage ? t('insert.imageUrl') : t('insert.linkUrl')}
         </label>
         <div className="mb-3 flex gap-2">
           <input
             id="insert-url"
             autoFocus
             className={FIELD}
-            value={isDataUrl ? `(파일) ${fileName}` : url}
+            value={isDataUrl ? t('insert.fileValue', { name: fileName }) : url}
             readOnly={isDataUrl}
             placeholder="https://example.com"
             onChange={(event) => setUrl(event.target.value)}
           />
           {isDataUrl && (
             <button type="button" className={BUTTON} onClick={() => setUrl('')}>
-              지우기
+              {t('insert.clear')}
             </button>
           )}
           {canPickFile && (
             <button type="button" className={`${BUTTON} flex shrink-0 items-center gap-1.5`} onClick={() => void pickFile()}>
               <FolderOpen size={15} />
-              파일 선택…
+              {t('insert.pickFile')}
             </button>
           )}
         </div>
@@ -141,7 +143,7 @@ export function InsertDialog({ editor, request, onClose }: { editor: Editor; req
         {isImage ? (
           <>
             <label className="mb-1 block text-[12px] text-ink-muted" htmlFor="insert-alt">
-              대체 텍스트
+              {t('insert.alt')}
             </label>
             <input id="insert-alt" className={`${FIELD} mb-3`} value={alt} onChange={(event) => setAlt(event.target.value)} />
           </>
@@ -149,7 +151,7 @@ export function InsertDialog({ editor, request, onClose }: { editor: Editor; req
           !request.hasSelection && (
             <>
               <label className="mb-1 block text-[12px] text-ink-muted" htmlFor="insert-text">
-                표시할 텍스트
+                {t('insert.text')}
               </label>
               <input id="insert-text" className={`${FIELD} mb-3`} value={text} onChange={(event) => setText(event.target.value)} />
             </>
@@ -158,8 +160,8 @@ export function InsertDialog({ editor, request, onClose }: { editor: Editor; req
 
         <p className="mb-4 text-[12px] text-ink-muted">
           {isImage
-            ? '인터넷 주소(https://…)를 입력하거나 파일을 선택하세요.'
-            : '인터넷 주소(https://…)를 입력하거나 파일을 선택하세요. 주소를 비우면 링크가 제거됩니다.'}
+            ? t('insert.hintImage')
+            : t('insert.hintLink')}
         </p>
         {error && (
           <p role="alert" className="mb-3 text-[12px] text-accent">
@@ -169,10 +171,10 @@ export function InsertDialog({ editor, request, onClose }: { editor: Editor; req
 
         <div className="flex justify-end gap-2">
           <button type="button" className={BUTTON} onClick={onClose}>
-            취소
+            {t('insert.cancel')}
           </button>
           <button type="submit" className="rounded bg-accent px-4 py-1.5 text-[13px] text-white hover:opacity-90">
-            {isImage ? '삽입' : '확인'}
+            {isImage ? t('insert.submitImage') : t('insert.submitLink')}
           </button>
         </div>
       </form>

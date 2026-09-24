@@ -1,3 +1,4 @@
+import { t } from '../../i18n/i18n';
 import type { LocalFileKind, OpenedDocument, PickedFile, PlatformAPI, SavedDocument } from '../types';
 
 function pickFile(accept = '.md,.markdown,text/markdown'): Promise<File | null> {
@@ -34,7 +35,7 @@ function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error('파일을 읽지 못했습니다.'));
+    reader.onerror = () => reject(new Error(t('error.readFile')));
     reader.readAsDataURL(file);
   });
 }
@@ -47,7 +48,7 @@ export const webPlatform: PlatformAPI = {
     const file = await pickFile('image/*');
     if (!file) return null;
     if (file.size > MAX_WEB_IMAGE_BYTES) {
-      throw new Error('웹에서는 1MB 이하 이미지만 파일로 넣을 수 있습니다. 이미지 주소를 입력하세요.');
+      throw new Error(t('error.webImageTooLarge'));
     }
     return { url: await readAsDataUrl(file), name: file.name };
   },

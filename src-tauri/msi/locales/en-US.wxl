@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-US" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  <String Id="mwAssocTitle">File Associations</String>
+  <String Id="mwAssocDescription">Choose whether to open Markdown files with Markwiz.</String>
+  <String Id="mwAssocCheckbox">Open .md and .markdown files with Markwiz</String>
+</WixLocalization>

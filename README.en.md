@@ -45,7 +45,8 @@ Grab the latest installer from the [Releases page](https://github.com/objectworl
 | File | Description |
 |---|---|
 | `Markwiz_0.1.2_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `Markwiz_0.1.2_x64_en-US.msi` | MSI package |
+| `Markwiz_0.1.2_x64_en-US.msi` | MSI package (English) |
+| `Markwiz_0.1.2_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation (requires WebView2 runtime) |
 
 The app isn't code-signed, so Windows SmartScreen may warn on first launch ("More info → Run
@@ -125,7 +126,8 @@ Artifacts are written to `src-tauri/target/release/`.
 | File | Description |
 |---|---|
 | `bundle/nsis/Markwiz_0.1.2_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `bundle/msi/Markwiz_0.1.2_x64_en-US.msi` | MSI package |
+| `bundle/msi/Markwiz_0.1.2_x64_en-US.msi` | MSI package (English) |
+| `bundle/msi/Markwiz_0.1.2_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation |
 
 - Running the exe alone (without an installer) requires the **WebView2 runtime** on the target PC.
@@ -375,6 +377,12 @@ full list is in [`src/commands/keymap.json`](src/commands/keymap.json).
 
 ### 0.1.2 (2026-09-24)
 
+- **Korean / English UI**: every menu, toolbar button, status bar, dialog, and the sample document
+  is available in Korean and English. Switch any time from **Help > 언어 / Language**; the choice
+  is remembered. The NSIS installer asks for a language at startup (and shows its own pages in
+  it); MSI comes as one file per language (`_ko-KR.msi`, `_en-US.msi`). The language picked at
+  install time becomes the app's default on first launch. Without an installer (web, standalone
+  exe) the browser/OS language is used
 - **Export to PDF / Word**: a new "Export" group in the toolbar and menu. PDF uses the
   browser's/webview's print feature; Word is built by converting the document tree directly into a
   `.docx` (headings, formatting, lists, tables, footnotes, images, and diagrams included). See

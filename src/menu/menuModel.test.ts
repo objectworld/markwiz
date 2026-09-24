@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadKeymap } from '../commands/keymap';
-import { diagramActions, exportActions, fontActions, historyActions, insertActions, paragraphActions, viewActions } from '../ribbon/ribbonActions';
-import { buildMenuModel, EXPORT_MENU_TEXT, RECENT_MENU_TEXT } from './menuModel';
+import { actionLabel, diagramActions, exportActions, fontActions, historyActions, insertActions, paragraphActions, viewActions } from '../ribbon/ribbonActions';
+import { buildMenuModel, exportMenuText, recentMenuText } from './menuModel';
 
 const model = buildMenuModel(loadKeymap());
 const group = (text: string) => model.find((candidate) => candidate.text === text)!;
@@ -15,12 +15,12 @@ describe('native menu model', () => {
 
   it('lists the same items as the ribbon for each group', () => {
     const names = (text: string) => items(text).map((entry) => entry.text);
-    expect(names('편집')).toEqual(historyActions.map((action) => action.label));
-    expect(names('글꼴')).toEqual(fontActions.map((action) => action.label));
-    expect(names('단락')).toEqual(paragraphActions.map((action) => action.label));
-    expect(names('삽입')).toEqual(insertActions.map((action) => action.label));
-    expect(names('다이어그램')).toEqual(diagramActions.map((action) => action.label));
-    expect(names('보기')).toEqual(viewActions.map((action) => action.label));
+    expect(names('편집')).toEqual(historyActions.map((action) => actionLabel(action)));
+    expect(names('글꼴')).toEqual(fontActions.map((action) => actionLabel(action)));
+    expect(names('단락')).toEqual(paragraphActions.map((action) => actionLabel(action)));
+    expect(names('삽입')).toEqual(insertActions.map((action) => actionLabel(action)));
+    expect(names('다이어그램')).toEqual(diagramActions.map((action) => actionLabel(action)));
+    expect(names('보기')).toEqual(viewActions.map((action) => actionLabel(action)));
     expect(names('도움말')).toEqual(['README 보기', 'Markwiz 정보']);
   });
 
@@ -40,18 +40,18 @@ describe('native menu model', () => {
 describe('파일 > 내보내기', () => {
   it('is a submenu of the file menu (not a top-level menu) with the same items as the ribbon export group', () => {
     const file = buildMenuModel(loadKeymap())[0];
-    const submenu = file.entries.find((entry) => entry.kind === 'submenu' && entry.text === EXPORT_MENU_TEXT);
+    const submenu = file.entries.find((entry) => entry.kind === 'submenu' && entry.text === exportMenuText());
     expect(submenu && submenu.kind === 'submenu' && submenu.entries.map((entry) => (entry.kind === 'item' ? entry.text : entry.kind))).toEqual(
-      exportActions.map((action) => action.label),
+      exportActions.map((action) => actionLabel(action)),
     );
-    expect(buildMenuModel(loadKeymap()).some((candidate) => candidate.text === EXPORT_MENU_TEXT)).toBe(false);
+    expect(buildMenuModel(loadKeymap()).some((candidate) => candidate.text === exportMenuText())).toBe(false);
   });
 });
 
 describe('파일 > 최근에 연 파일', () => {
   const recentFiles = Array.from({ length: 10 }, (_, i) => ({ path: `C:\\docs\\note${i}.md`, name: `note${i}.md` }));
   const submenuOf = (groups: ReturnType<typeof buildMenuModel>) => {
-    const entry = groups[0].entries.find((candidate) => candidate.kind === 'submenu' && candidate.text === RECENT_MENU_TEXT);
+    const entry = groups[0].entries.find((candidate) => candidate.kind === 'submenu' && candidate.text === recentMenuText());
     if (!entry || entry.kind !== 'submenu') throw new Error('no submenu');
     return entry;
   };

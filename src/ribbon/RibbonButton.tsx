@@ -1,6 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import { getShortcutForPlatform, loadKeymap } from '../commands/keymap';
-import type { RibbonAction } from './ribbonActions';
+import { actionLabel, type RibbonAction } from './ribbonActions';
 
 interface RibbonButtonProps {
   action: RibbonAction;
@@ -11,7 +11,8 @@ interface RibbonButtonProps {
 
 function tooltip(action: RibbonAction): string {
   const entry = action.commandId ? loadKeymap()[action.commandId] : undefined;
-  return entry ? `${action.label} (${getShortcutForPlatform(entry)})` : action.label;
+  const label = actionLabel(action);
+  return entry ? `${label} (${getShortcutForPlatform(entry)})` : label;
 }
 
 export function RibbonButton({ action, editor, active, disabled }: RibbonButtonProps) {
@@ -23,7 +24,7 @@ export function RibbonButton({ action, editor, active, disabled }: RibbonButtonP
     <button
       type="button"
       title={tooltip(action)}
-      aria-label={action.label}
+      aria-label={actionLabel(action)}
       aria-pressed={action.isActive ? active : undefined}
       disabled={disabled || !editor}
       // 버튼을 눌러도 에디터의 선택 영역이 사라지지 않도록 포커스 이동을 막는다.

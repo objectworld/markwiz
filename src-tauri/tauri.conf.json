@@ -48,10 +48,16 @@
     },
     "windows": {
       "nsis": {
-        "template": "nsis/installer.nsi"
+        "template": "nsis/installer.nsi",
+        "languages": ["English", "Korean"],
+        "displayLanguageSelector": true
       },
       "wix": {
-        "template": "msi/main.wxs"
+        "template": "msi/main.wxs",
+        "language": {
+          "en-US": { "localePath": "msi/locales/en-US.wxl" },
+          "ko-KR": { "localePath": "msi/locales/ko-KR.wxl" }
+        }
       }
     }
   }

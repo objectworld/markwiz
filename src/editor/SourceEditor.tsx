@@ -1,12 +1,14 @@
 import { setViewState, useViewState } from '../commands/viewState';
+import { t, useLanguage } from '../i18n/i18n';
 
 // 소스 코드 모드: 문서를 마크다운 원문 그대로 편집한다. 모드를 끌 때 에디터에 다시 반영된다.
 export function SourceEditor() {
   const { sourceText } = useViewState();
+  useLanguage();
 
   return (
     <textarea
-      aria-label="마크다운 소스"
+      aria-label={t('source.aria')}
       value={sourceText}
       spellCheck={false}
       autoFocus

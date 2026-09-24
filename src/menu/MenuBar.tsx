@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { loadKeymap } from '../commands/keymap';
 import { useRecentFiles } from '../commands/recentFiles';
+import { t, useLanguage } from '../i18n/i18n';
 import { buildMenuModel, type MenuEntry } from './menuModel';
 
 interface MenuListProps {
@@ -39,8 +40,9 @@ function MenuList({ entries, editor, onDone, nested }: MenuListProps) {
           <button
             key={entry.id}
             type="button"
-            role="menuitem"
             disabled={!editor || entry.disabled}
+            role={entry.checked !== undefined ? 'menuitemradio' : 'menuitem'}
+            aria-checked={entry.checked}
             title={entry.title}
             // 메뉴를 눌러도 에디터의 선택 영역이 사라지지 않도록 포커스 이동을 막는다.
             onMouseDown={(event) => event.preventDefault()}
@@ -50,7 +52,14 @@ function MenuList({ entries, editor, onDone, nested }: MenuListProps) {
             }}
             className="flex w-full items-center justify-between gap-8 px-3 py-1.5 text-left hover:bg-chrome-hover disabled:opacity-40"
           >
-            <span className="truncate">{entry.text}</span>
+            <span className="truncate">
+              {entry.checked !== undefined && (
+                <span aria-hidden className="inline-block w-4">
+                  {entry.checked ? '✓' : ''}
+                </span>
+              )}
+              {entry.text}
+            </span>
             {(entry.shortcut ?? entry.detail) && (
               <span className="min-w-0 shrink-[3] truncate text-[12px] text-ink-muted">{entry.shortcut ?? entry.detail}</span>
             )}
@@ -67,8 +76,10 @@ export function MenuBar({ editor }: { editor: Editor | null }) {
   const [open, setOpen] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const recentFiles = useRecentFiles();
-  // 최근 파일 목록이 바뀔 때만 메뉴를 다시 만든다.
-  const groups = useMemo(() => buildMenuModel(loadKeymap(), recentFiles), [recentFiles]);
+  const language = useLanguage();
+  // 최근 파일 목록이나 언어가 바뀔 때만 메뉴를 다시 만든다.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const groups = useMemo(() => buildMenuModel(loadKeymap(), recentFiles), [recentFiles, language]);
 
   useEffect(() => {
     if (open === null) return;
@@ -90,7 +101,7 @@ export function MenuBar({ editor }: { editor: Editor | null }) {
     <div
       ref={barRef}
       role="menubar"
-      aria-label="메뉴"
+      aria-label={t('menu.aria')}
       className="flex h-7 shrink-0 select-none items-center bg-chrome px-1 text-[13px] text-ink"
     >
       {groups.map((group, index) => (

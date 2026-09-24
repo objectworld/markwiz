@@ -1,6 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import { executeCommand } from '../commands/registry';
 import { getViewState, showNotice } from '../commands/viewState';
+import { t } from '../i18n/i18n';
 
 // PDF 내보내기는 별도 라이브러리 없이 브라우저/웹뷰의 인쇄 기능을 그대로 쓴다 — 실제 벡터 텍스트와
 // 이미 그려진 다이어그램(SVG)을 그대로 살리면서, 인쇄 대화상자에서 "PDF로 저장"(Windows는
@@ -12,7 +13,7 @@ export function exportPdf(editor: Editor): void {
   if (getViewState().sourceMode) {
     executeCommand('view.sourceMode', editor);
     if (getViewState().sourceMode) {
-      showNotice('소스 코드에 오류가 있어 PDF로 내보낼 수 없습니다. 오류를 고친 뒤 다시 시도하세요.');
+      showNotice(t('notice.pdfSourceError'));
       return;
     }
   }

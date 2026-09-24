@@ -1,3 +1,5 @@
+import { t, useLanguage } from '../../i18n/i18n';
+
 export type DiagramViewMode = 'preview' | 'code';
 
 interface DiagramToggleProps {
@@ -7,6 +9,7 @@ interface DiagramToggleProps {
 
 // Mermaid/PlantUML 노드뷰가 공유하는 코드/렌더링 토글 버튼.
 export function DiagramToggle({ mode, onToggle }: DiagramToggleProps) {
+  useLanguage();
   return (
     <button
       type="button"
@@ -14,7 +17,7 @@ export function DiagramToggle({ mode, onToggle }: DiagramToggleProps) {
       contentEditable={false}
       onClick={onToggle}
     >
-      {mode === 'preview' ? '코드 보기' : '미리보기'}
+      {mode === 'preview' ? t('diagram.showCode') : t('diagram.showPreview')}
     </button>
   );
 }

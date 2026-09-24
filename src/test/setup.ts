@@ -26,3 +26,11 @@ if (typeof Range !== 'undefined') {
     rangeProto.getBoundingClientRect = () => ({ x: 0, y: 0, width: 0, height: 0, top: 0, right: 0, bottom: 0, left: 0 }) as DOMRect;
   }
 }
+
+// 테스트는 한국어 UI를 기준으로 쓰여 있다. jsdom의 기본 언어는 en-US라 앱이 영어로 시작하므로 명시적으로 고정하고,
+// 언어를 바꾸는 테스트가 다음 테스트에 새지 않게 매번 되돌린다.
+import { afterEach } from 'vitest';
+import { setLanguage } from '../i18n/i18n';
+
+setLanguage('ko', { persist: false });
+afterEach(() => setLanguage('ko', { persist: false }));
