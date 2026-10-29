@@ -10,7 +10,7 @@ A Typora-style WYSIWYG Markdown editor built on Tiptap (ProseMirror). It renders
 PlantUML diagrams entirely client-side, with no backend server required. Web and desktop (Tauri)
 share the same codebase.
 
-**Current version: 0.1.2** (2026-09-24). See the [release notes](#release-notes) for what changed.
+**Current version: 0.1.3** (2026-10-29). See the [release notes](#release-notes) for what changed.
 
 ![Markwiz screenshot](docs/images/screenshot.png)
 
@@ -19,6 +19,9 @@ share the same codebase.
 - **Real-time WYSIWYG editing** — Markdown syntax (`# `, `**bold**`, `- `, `> `, ` ``` `, `[]()`, etc.)
   turns into formatting the moment you type it, and the raw syntax is shown only on the line the
   cursor is on (Typora-style).
+- **Multiple document tabs** — open and edit several `.md` files at once from a tab strip below
+  the ribbon. Each tab keeps its own undo history, and closing a tab with unsaved changes asks
+  whether to save first.
 - **Diagrams** — ` ```mermaid ` and ` ```plantuml ` code blocks render as diagrams. No backend
   server needed.
 - **Export to PDF / Word** — both printing (PDF) and generating a real `.docx` (Word) happen in the
@@ -44,9 +47,9 @@ Grab the latest installer from the [Releases page](https://github.com/objectworl
 
 | File | Description |
 |---|---|
-| `Markwiz_0.1.2_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `Markwiz_0.1.2_x64_en-US.msi` | MSI package (English) |
-| `Markwiz_0.1.2_x64_ko-KR.msi` | MSI package (Korean) |
+| `Markwiz_0.1.3_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
+| `Markwiz_0.1.3_x64_en-US.msi` | MSI package (English) |
+| `Markwiz_0.1.3_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation (requires WebView2 runtime) |
 
 The app isn't code-signed, so Windows SmartScreen may warn on first launch ("More info → Run
@@ -125,9 +128,9 @@ Artifacts are written to `src-tauri/target/release/`.
 
 | File | Description |
 |---|---|
-| `bundle/nsis/Markwiz_0.1.2_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `bundle/msi/Markwiz_0.1.2_x64_en-US.msi` | MSI package (English) |
-| `bundle/msi/Markwiz_0.1.2_x64_ko-KR.msi` | MSI package (Korean) |
+| `bundle/nsis/Markwiz_0.1.3_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
+| `bundle/msi/Markwiz_0.1.3_x64_en-US.msi` | MSI package (English) |
+| `bundle/msi/Markwiz_0.1.3_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation |
 
 - Running the exe alone (without an installer) requires the **WebView2 runtime** on the target PC.
@@ -366,14 +369,23 @@ full list is in [`src/commands/keymap.json`](src/commands/keymap.json).
   app hasn't been verified.
 - `.md` file association only applies when installed via an installer (NSIS/MSI); it doesn't apply
   to the standalone `markwiz.exe`.
-- The web version has no menu bar (toolbar only), so Help (view README) and Recently Opened Files
-  aren't available there.
+- The web version's menu bar has no Recently Opened Files (the web can't remember file paths).
 - PlantUML's `!theme`, standard library includes (`!include <...>`), and dark mode aren't
   supported.
 - Merged table cells that can't be expressed in GFM (colspan/rowspan) aren't preserved on save.
 - Only a light theme is supported.
 
 ## Release notes
+
+### 0.1.3 (2026-10-29)
+
+- **Multiple document tabs**: open and edit several `.md` files at once as tabs. Each tab keeps its
+  own undo history, cursor, and scroll position, and closing a tab with unsaved changes (●) asks
+  whether to save first. Opening a file that is already open switches to its tab. The tab strip
+  sits right below the ribbon
+- **Menu bar on the web too**: the web version now shows the same menu bar as the desktop app
+  (Windows/Linux). Help (view README) and language switching are available on the web as well.
+  There is no Recently Opened Files on the web
 
 ### 0.1.2 (2026-09-24)
 

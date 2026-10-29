@@ -70,16 +70,17 @@ function MenuList({ entries, editor, onDone, nested }: MenuListProps) {
   );
 }
 
-// Windows/Linux 데스크탑용 앱 안 메뉴 바. OS가 그리는 네이티브 메뉴 바는 색을 바꿀 수 없어
+// Windows/Linux 데스크탑과 웹용 앱 안 메뉴 바. OS가 그리는 네이티브 메뉴 바는 색을 바꿀 수 없어
 // (Windows 11에서 흰색 고정) 툴바와 같은 chrome 색으로 직접 그린다.
-export function MenuBar({ editor }: { editor: Editor | null }) {
+// showRecent: 최근 파일은 데스크탑에서만 기록되므로 웹에서는 false로 넘겨 항목을 뺀다.
+export function MenuBar({ editor, showRecent = true }: { editor: Editor | null; showRecent?: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const recentFiles = useRecentFiles();
   const language = useLanguage();
   // 최근 파일 목록이나 언어가 바뀔 때만 메뉴를 다시 만든다.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const groups = useMemo(() => buildMenuModel(loadKeymap(), recentFiles), [recentFiles, language]);
+  const groups = useMemo(() => buildMenuModel(loadKeymap(), recentFiles, { showRecent }), [recentFiles, language, showRecent]);
 
   useEffect(() => {
     if (open === null) return;

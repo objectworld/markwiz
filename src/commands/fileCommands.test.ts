@@ -4,6 +4,7 @@ import { editorExtensions } from '../editor/extensions';
 import type { OpenedDocument, PlatformAPI, SavedDocument } from '../platform';
 import { getDocumentState, setDocumentState } from './documentState';
 import { getRecentFiles, resetRecentFilesCache } from './recentFiles';
+import { getActiveTab, getTabsState, resetTabsState } from './tabsState';
 import { getViewState, resetViewState } from './viewState';
 import { executeCommand } from './registry';
 import { openRecentFile } from './fileCommands';
@@ -20,6 +21,7 @@ beforeEach(() => {
   localStorage.clear();
   resetRecentFilesCache();
   resetViewState();
+  resetTabsState();
   editor = new Editor({ extensions: editorExtensions, content: '<p>hello</p>' });
   setDocumentState({ path: null, name: 'untitled.md' });
   mockPlatform = {
@@ -41,9 +43,16 @@ async function flushMicrotasks() {
 }
 
 describe('file commands', () => {
-  it('file.new clears the editor and resets document state', () => {
+  it('file.new opens a new, empty tab instead of touching the current one', () => {
+    const before = getActiveTab().id;
+    const tabCountBefore = getTabsState().tabs.length;
+
     executeCommand('file.new', editor);
-    expect(editor.getText()).toBe('');
+
+    // 기존 탭/에디터는 그대로 남아 있다 — 새 탭이 생겼을 뿐이다.
+    expect(editor.getText()).toBe('hello');
+    expect(getTabsState().tabs).toHaveLength(tabCountBefore + 1);
+    expect(getActiveTab().id).not.toBe(before);
     expect(getDocumentState()).toEqual({ path: null, name: 'untitled.md' });
   });
 
@@ -76,6 +85,44 @@ describe('file commands', () => {
     await flushMicrotasks();
 
     expect(pathWhileRendering).toBe('C:\\docs\\note.md');
+  });
+
+  it('file.open opens a new tab (leaving the current one untouched) when the active tab is not blank', async () => {
+    (mockPlatform.openFile as ReturnType<typeof vi.fn>).mockResolvedValue({
+      path: '/docs/a.md',
+      name: 'a.md',
+      content: '# A',
+    });
+    setDocumentState({ path: '/docs/already-open.md', name: 'already-open.md' });
+    const tabCountBefore = getTabsState().tabs.length;
+
+    executeCommand('file.open', editor);
+    await flushMicrotasks();
+
+    // 기존 탭(과 그 에디터)은 그대로 남아 있다.
+    expect(editor.getText()).toBe('hello');
+    expect(getTabsState().tabs).toHaveLength(tabCountBefore + 1);
+    expect(getDocumentState()).toEqual({ path: '/docs/a.md', name: 'a.md' });
+  });
+
+  it('file.open focuses the existing tab instead of opening a duplicate, when the file is already open', async () => {
+    (mockPlatform.openFile as ReturnType<typeof vi.fn>).mockResolvedValue({
+      path: '/docs/a.md',
+      name: 'a.md',
+      content: '# A',
+    });
+    executeCommand('file.open', editor); // 첫 번째 호출: 활성 탭이 비어 있어 재사용됨.
+    await flushMicrotasks();
+    const firstTabId = getActiveTab().id;
+    executeCommand('file.new', editor); // 다른(두 번째) 탭으로 옮겨 간 상태를 만든다.
+    const tabCountBefore = getTabsState().tabs.length;
+
+    executeCommand('file.open', editor); // 세 번째 호출: 이미 열려 있는 a.md를 다시 연다.
+    await flushMicrotasks();
+
+    expect(getTabsState().tabs).toHaveLength(tabCountBefore);
+    expect(getActiveTab().id).toBe(firstTabId);
+    expect(getDocumentState()).toEqual({ path: '/docs/a.md', name: 'a.md' });
   });
 
   it('file.save falls back to save-as when there is no current path', async () => {

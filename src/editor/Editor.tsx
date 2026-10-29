@@ -1,23 +1,23 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { isTauri } from '@tauri-apps/api/core';
-import { EditorContent, useEditor } from '@tiptap/react';
+import type { Editor as TiptapEditor } from '@tiptap/core';
 import { COMMAND_IDS, type CommandId } from '../commands/commandIds';
 import { detectPlatform, getShortcutForPlatform, loadKeymap } from '../commands/keymap';
 import { executeCommand } from '../commands/registry';
 import { matchesShortcut } from '../commands/shortcutFormat';
-import { useDocumentState } from '../commands/useDocumentState';
+import { useTabsState } from '../commands/tabsState';
 import { getViewState, setViewState, useViewState } from '../commands/viewState';
-import { t, useLanguage } from '../i18n/i18n';
+import { useLanguage } from '../i18n/i18n';
 import { AboutDialog } from '../menu/AboutDialog';
 import { HelpDialog } from '../menu/HelpDialog';
 import { MenuBar } from '../menu/MenuBar';
 import { Ribbon } from '../ribbon/Ribbon';
 import { StatusBar } from '../ribbon/StatusBar';
-import { editorExtensions } from './extensions';
+import { CloseTabDialog } from './CloseTabDialog';
+import { DocumentPane } from './DocumentPane';
 import { InsertDialog } from './InsertDialog';
 import { Sidebar } from './Sidebar';
-import { SourceEditor } from './SourceEditor';
-import { scrollCaretToCenter } from './typewriter';
+import { TabBar } from './TabBar';
 import '../styles/editor.css';
 
 // 앱 레벨 단축키(파일/보기). 에디터에 포커스가 없을 때를 위한 전역 처리 대상이다.
@@ -25,19 +25,27 @@ const APP_COMMAND_IDS = COMMAND_IDS.filter(
   (id): id is CommandId => id.startsWith('view.') || id.startsWith('file.'),
 );
 
-// OS가 그리는 메뉴 바는 색을 바꿀 수 없어, macOS(화면 맨 위 메뉴)를 뺀 데스크탑은 앱 안 메뉴 바를 쓴다.
-const USE_IN_APP_MENU = isTauri() && detectPlatform() !== 'mac';
+// OS가 그리는 메뉴 바는 색을 바꿀 수 없어, macOS 데스크탑(화면 맨 위 네이티브 메뉴)만 빼고
+// 데스크탑(Windows/Linux)과 웹 모두 앱 안 메뉴 바를 쓴다. 웹에는 네이티브 메뉴가 없다.
+const USE_IN_APP_MENU = !isTauri() || detectPlatform() !== 'mac';
 
 export function Editor() {
-  const editor = useEditor({
-    extensions: editorExtensions,
-    content: t('editor.initialContent'),
-    immediatelyRender: false,
-  });
-  const document = useDocumentState();
+  const { tabs, activeId } = useTabsState();
   const view = useViewState();
-  const scrollRef = useRef<HTMLElement>(null);
-  const language = useLanguage();
+  useLanguage();
+
+  // 지금 화면에 살아 있는 탭 수만큼의 Tiptap Editor 인스턴스. 각 DocumentPane이 자기 것을 등록/해제한다.
+  const [editorsById, setEditorsById] = useState<ReadonlyMap<string, TiptapEditor>>(new Map());
+  const registerEditor = useCallback((id: string, editor: TiptapEditor | null) => {
+    setEditorsById((prev) => {
+      const next = new Map(prev);
+      if (editor) next.set(id, editor);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+  const activeEditor = editorsById.get(activeId) ?? null;
+  const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
 
   // 설치 프로그램에서 고른 언어를 기본 언어로 적용한다(사용자가 직접 고른 언어가 없을 때만).
   useEffect(() => {
@@ -47,24 +55,13 @@ export function Editor() {
     });
   }, []);
 
-  // 아직 손대지 않은 시작 문서(안내 문구)는 언어가 바뀌면 그 언어의 안내 문구로 바꾼다. 직접 고친 문서는 건드리지 않는다.
-  const pristineHtml = useRef<string | null>(null);
-  useEffect(() => {
-    if (!editor) return;
-    if (pristineHtml.current !== null && editor.getHTML() === pristineHtml.current) {
-      editor.commands.setContent(t('editor.initialContent'), { emitUpdate: false });
-    }
-    pristineHtml.current = editor.getHTML();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, language]);
-
   // 에디터에 포커스가 없을 때(소스 모드 textarea, 웹, 앱 안 메뉴 바 사용 시)도 파일/보기 단축키가 동작하도록 한다.
   // 에디터가 이미 처리한 키(defaultPrevented)는 건너뛰어 두 번 실행되지 않게 한다.
   useEffect(() => {
-    if (!editor) return;
+    if (!activeEditor) return;
     const onKeyDown = (event: KeyboardEvent) => {
       const open = getViewState();
-      if (event.defaultPrevented || open.help || open.about || open.insert) return;
+      if (event.defaultPrevented || open.help || open.about || open.insert || open.closeTabConfirm) return;
       const keymap = loadKeymap();
       const id = APP_COMMAND_IDS.find((candidate) => {
         const entry = keymap[candidate];
@@ -72,33 +69,18 @@ export function Editor() {
       });
       if (!id) return;
       event.preventDefault();
-      executeCommand(id, editor);
+      executeCommand(id, activeEditor);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [editor]);
-
-  // 타자기 모드: 캐럿이 움직일 때마다 현재 줄을 화면 세로 중앙으로 맞춘다.
-  useEffect(() => {
-    if (!editor || !view.typewriterMode || view.sourceMode) return;
-    const recenter = () => {
-      if (scrollRef.current) scrollCaretToCenter(editor, scrollRef.current);
-    };
-    recenter();
-    editor.on('selectionUpdate', recenter);
-    editor.on('update', recenter);
-    return () => {
-      editor.off('selectionUpdate', recenter);
-      editor.off('update', recenter);
-    };
-  }, [editor, view.typewriterMode, view.sourceMode]);
+  }, [activeEditor]);
 
   useEffect(() => {
-    if (!editor || !isTauri() || USE_IN_APP_MENU) return;
+    if (!activeEditor || !isTauri() || USE_IN_APP_MENU) return;
     let cancelled = false;
     let dispose: (() => void) | undefined;
     void import('../platform/desktop/menu')
-      .then((m) => m.installNativeMenu(editor))
+      .then((m) => m.installNativeMenu(activeEditor))
       .then((unsubscribe) => {
         if (cancelled) unsubscribe();
         else dispose = unsubscribe;
@@ -107,15 +89,15 @@ export function Editor() {
       cancelled = true;
       dispose?.();
     };
-  }, [editor]);
+  }, [activeEditor]);
 
   // .md 파일 연결로 실행됐을 때(탐색기 더블클릭) 그 파일을 연다. 메뉴 바 종류와 무관하게 항상 켠다.
   useEffect(() => {
-    if (!editor || !isTauri()) return;
+    if (!activeEditor || !isTauri()) return;
     let cancelled = false;
     let dispose: (() => void) | undefined;
     void import('../platform/desktop/startupFile')
-      .then((m) => m.installStartupFileHandling(editor))
+      .then((m) => m.installStartupFileHandling(activeEditor))
       .then((unlisten) => {
         if (cancelled) unlisten();
         else dispose = unlisten;
@@ -124,50 +106,36 @@ export function Editor() {
       cancelled = true;
       dispose?.();
     };
-  }, [editor]);
+  }, [activeEditor]);
 
   useEffect(() => {
-    const title = `${document.name} - Markwiz`;
+    const title = `${activeTab.dirty ? '• ' : ''}${activeTab.name} - Markwiz`;
     window.document.title = title;
     if (isTauri()) void import('../platform/desktop/windowTitle').then((m) => m.setWindowTitle(title));
-  }, [document.name]);
+  }, [activeTab.name, activeTab.dirty]);
 
   return (
     <div className="flex h-screen flex-col bg-canvas">
-      {USE_IN_APP_MENU && <MenuBar editor={editor} />}
+      {USE_IN_APP_MENU && <MenuBar editor={activeEditor} showRecent={isTauri()} />}
       {/* editor가 null에서 생성되는 순간 useEditorState가 초기 스냅샷을 다시 계산하지 않으므로 key로 다시 마운트한다. */}
-      <Ribbon key={editor ? 'ribbon-ready' : 'ribbon-loading'} editor={editor} />
+      <Ribbon key={activeEditor ? 'ribbon-ready' : 'ribbon-loading'} editor={activeEditor} />
+      <TabBar editors={editorsById} />
       <div className="flex min-h-0 flex-1">
-        {view.sidebar && editor && <Sidebar editor={editor} />}
-        {/* Word처럼 회색 작업 영역 위에 흰 종이 한 장이 놓인 모양. 종이의 빈 곳을 눌러도 에디터에 포커스가 간다. */}
-        <main
-          ref={scrollRef}
-          className={`flex-1 overflow-y-auto py-6 ${view.focusMode ? 'markwiz-focus-mode' : ''}`}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) editor?.commands.focus('end');
-          }}
-        >
-          {view.sourceMode && <SourceEditor />}
-          {/* 소스 모드에서도 에디터(다이어그램 NodeView 포함)를 언마운트하지 않고 숨기기만 한다. */}
-          <div
-            hidden={view.sourceMode}
-            className="markwiz-paper mx-auto min-h-[1000px] w-[816px] max-w-[calc(100%-32px)] border border-chrome-border bg-white px-[72px] py-[72px] shadow-[0_1px_3px_rgba(61,57,41,0.12)]"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) editor?.commands.focus('end');
-            }}
-          >
-            <EditorContent editor={editor} />
-          </div>
-          {/* 타자기 모드에서 문서 끝 줄도 화면 중앙까지 올라올 수 있도록 여백을 둔다. */}
-          {view.typewriterMode && <div aria-hidden className="markwiz-typewriter-spacer" style={{ height: '50vh' }} />}
-        </main>
+        {view.sidebar && activeEditor && <Sidebar editor={activeEditor} />}
+        {/* 열려 있는 탭마다 하나씩, 활성 탭만 보이게 둔다(실행 취소 기록/스크롤 유지를 위해 비활성 탭도 계속 마운트). */}
+        {tabs.map((tab) => (
+          <DocumentPane key={tab.id} tab={tab} isActive={tab.id === activeId} onEditorReady={registerEditor} />
+        ))}
       </div>
-      {view.insert && editor && (
-        <InsertDialog editor={editor} request={view.insert} onClose={() => setViewState({ insert: null })} />
+      {view.insert && activeEditor && (
+        <InsertDialog editor={activeEditor} request={view.insert} onClose={() => setViewState({ insert: null })} />
       )}
       {view.about && <AboutDialog onClose={() => setViewState({ about: false })} />}
-      {view.help && editor && <HelpDialog editor={editor} onClose={() => setViewState({ help: false })} />}
-      <StatusBar key={editor ? 'status-ready' : 'status-loading'} editor={editor} />
+      {view.help && activeEditor && <HelpDialog editor={activeEditor} onClose={() => setViewState({ help: false })} />}
+      {view.closeTabConfirm && (
+        <CloseTabDialog tabId={view.closeTabConfirm} editors={editorsById} onClose={() => setViewState({ closeTabConfirm: null })} />
+      )}
+      <StatusBar key={activeEditor ? 'status-ready' : 'status-loading'} editor={activeEditor} />
     </div>
   );
 }

@@ -11,7 +11,6 @@ import { ReactNodeViewRenderer } from '@tiptap/react';
 import TaskList from '@tiptap/extension-task-list';
 import Image from '@tiptap/extension-image';
 import { mergeAttributes } from '@tiptap/core';
-import { getDocumentState } from '../../commands/documentState';
 import { resolveDisplaySrc } from '../../platform/localFile';
 import { TableKit } from '@tiptap/extension-table';
 import { TaskItem } from './taskItem';
@@ -19,6 +18,7 @@ import { FootnoteReference, FootnoteDefinition } from './footnote';
 import { FocusLineDecoration } from './focusLineDecoration';
 import { CurrentBlock } from './currentBlock';
 import { CommandKeymap } from './commandKeymap';
+import { DocumentMeta } from './documentMeta';
 import { lowlight } from './lowlight';
 import { CodeBlockView } from '../nodeviews/CodeBlockView';
 
@@ -58,11 +58,15 @@ export const editorExtensions = [
   // Tiptap Image는 기본이 block 레벨 노드라 문단 안에 들어갈 수 없다.
   // 마크다운의 `텍스트 ![alt](src) 텍스트`처럼 인라인으로 쓰기 위해 명시적으로 켠다.
   // 화면에 그릴 때만 file:// 주소와 상대 경로를 웹뷰가 읽을 수 있는 주소로 바꾸고, 문서(직렬화)에는 원래 값이 남는다.
+  // 경로는 전역 documentState가 아니라 this.editor.storage.documentMeta.path(이 에디터/탭 자신의 경로)로 읽는다 —
+  // 탭이 여러 개면 화면에 보이지 않는 다른 탭의 이미지가 활성 탭의 경로로 잘못 풀리면 안 되기 때문이다.
   Image.extend({
     renderHTML({ HTMLAttributes }) {
       return [
         'img',
-        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { src: resolveDisplaySrc(HTMLAttributes.src, getDocumentState().path) }),
+        mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+          src: resolveDisplaySrc(HTMLAttributes.src, this.editor?.storage.documentMeta.path ?? null),
+        }),
       ];
     },
   }).configure({ inline: true }),
@@ -72,4 +76,5 @@ export const editorExtensions = [
   FocusLineDecoration,
   CurrentBlock,
   CommandKeymap,
+  DocumentMeta,
 ];

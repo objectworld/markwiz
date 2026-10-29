@@ -23,6 +23,9 @@ export interface ViewState {
   notice: string;
   // 소스 모드에서 textarea가 편집하는 마크다운 원문. 소스 모드가 꺼져 있을 때는 의미가 없다.
   sourceText: string;
+  // 바뀐 내용이 있는 탭을 닫으려 할 때 "저장 후 닫기/저장 없이 닫기/취소"를 물어보는 창.
+  // 탭 id가 있으면 그 탭에 대해 묻는 중이라는 뜻.
+  closeTabConfirm: string | null;
 }
 
 const initialState: ViewState = {
@@ -35,6 +38,7 @@ const initialState: ViewState = {
   insert: null,
   notice: '',
   sourceText: '',
+  closeTabConfirm: null,
 };
 
 let state: ViewState = initialState;

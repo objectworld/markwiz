@@ -120,6 +120,17 @@ export const ko = {
   'help.title': '도움말',
   'help.titleWithFile': '도움말 — {file}',
 
+  // 문서 탭 모음
+  'tab.bar.aria': '열린 문서',
+  'tab.new': '새 탭',
+  'tab.close': '{name} 닫기',
+  'tab.unsaved': '{name} (바뀐 내용 있음)',
+  'tab.closeConfirmTitle': '바뀐 내용을 저장할까요?',
+  'tab.closeConfirmBody': '"{name}"에 저장하지 않은 변경 내용이 있습니다.',
+  'tab.save': '저장',
+  'tab.discard': '저장 안 함',
+  'tab.cancel': '취소',
+
   // 상태바 안내(notice)
   'notice.recentRemoved': '파일을 열 수 없어 최근 목록에서 뺐습니다: {name}',
   'notice.docxSaved': 'Word 파일로 내보냈습니다: {name}',
@@ -247,6 +258,16 @@ export const en: Record<MessageKey, string> = {
     'It runs from the same code in the web browser and on the desktop (Tauri), and saved Markdown reopens exactly as it was.',
   'help.title': 'Help',
   'help.titleWithFile': 'Help — {file}',
+
+  'tab.bar.aria': 'Open documents',
+  'tab.new': 'New tab',
+  'tab.close': 'Close {name}',
+  'tab.unsaved': '{name} (unsaved changes)',
+  'tab.closeConfirmTitle': 'Save changes?',
+  'tab.closeConfirmBody': '"{name}" has unsaved changes.',
+  'tab.save': 'Save',
+  'tab.discard': "Don't Save",
+  'tab.cancel': 'Cancel',
 
   'notice.recentRemoved': "Couldn't open the file, so it was removed from the recent list: {name}",
   'notice.docxSaved': 'Exported to Word: {name}',

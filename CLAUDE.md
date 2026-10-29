@@ -99,6 +99,9 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 레이아웃은 `src/editor/Editor.tsx`.
 
 - **제목 표시줄**: 빠른 실행 도구(저장 / 실행 취소 / 다시 실행) + `문서이름 - Markwiz`
+- **문서 탭**: 리본 바로 아래(높이 28px)에 브라우저/VS Code 같은 문서 탭 줄(`src/editor/TabBar.tsx`)을 두어 여러 `.md` 파일을
+  동시에 열어 편집할 수 있다. 바로 아래 "툴바는 탭 없이 한 줄" 규칙은 리본 안을 홈/삽입처럼 나누지 말라는
+  뜻으로 이 문서 탭과는 무관하다(리본은 여전히 한 줄). 자세한 동작은 "구현 결정"의 "다중 문서 탭" 항목 참고
 - **툴바는 탭 없이 한 줄**(홈/삽입 탭으로 나누지 말 것). 그룹 순서와 구성:
   - 파일: 새로 만들기, 열기, 저장, 다른 이름으로 저장
   - 글꼴: **스타일 드롭다운**(본문, 제목 1~6) + 굵게, 기울임, 취소선, 인라인 코드, 서식 지우기
@@ -142,9 +145,11 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - **메뉴**: 리본과 같은 그룹/항목(파일 / 편집 / 글꼴 / 단락 / 삽입 / 다이어그램 / 보기) + 끝에 **도움말**(README 보기).
   단, 리본의 "내보내기" 그룹은 메뉴에서 최상위가 아니라 **파일 > 내보내기 서브메뉴**다(`EXPORT_MENU_TEXT`, 같은 `exportActions`를 재사용).
   `src/menu/menuModel.ts`가 `ribbonActions.ts`에서 모델을 만들고(리본에 항목을 추가하면 메뉴에도 자동 반영),
-  Windows/Linux 데스크탑은 앱 안 `MenuBar`(툴바와 같은 `chrome` 색)로, macOS는 네이티브 메뉴(`platform/desktop/menu.ts`)로 그린다.
+  Windows/Linux 데스크탑과 웹은 앱 안 `MenuBar`(툴바와 같은 `chrome` 색)로, macOS 데스크탑만 네이티브 메뉴(`platform/desktop/menu.ts`)로 그린다
+  (`Editor.tsx`의 `USE_IN_APP_MENU = !isTauri() || platform !== 'mac'`).
   Windows 네이티브 메뉴 바는 OS가 흰색으로 그려 색을 바꿀 수 없어서 앱 안 메뉴 바로 바꿨다(Alt+문자 니모닉은 없음).
-  웹에는 메뉴 바가 없다(리본만) — 그래서 웹에서는 도움말에 접근할 수 없다.
+  웹에도 같은 메뉴 바가 있어 도움말/언어 전환을 쓸 수 있다. 단 웹은 최근 파일을 기록하지 않으므로(`openFileAt` 없음) `Editor.tsx`가 `MenuBar`에
+  `showRecent={isTauri()}`를 넘겨 `buildMenuModel(…, { showRecent })`로 "최근에 연 파일" 서브메뉴를 뺀다.
   앱 안 메뉴 바/웹에서는 파일·보기 단축키를 `Editor.tsx`의 window keydown 리스너가 처리한다(에디터가 처리한 키는 건너뜀).
   서식 항목은 accelerator 없이 단축키 표시만 한다(Tiptap 키맵과 이중 실행 방지).
 - **파일 > 최근에 연 파일**(최대 10개, `MAX_RECENT_FILES`): 목록은 `src/commands/recentFiles.ts`가 localStorage(`markwiz:recent-files`)에 두고
@@ -197,15 +202,41 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   읽어 `platform/desktop/installerLanguage.ts`가 `persist:false`로 적용한다(저장하지 않아야 이후 사용자가 직접 고르기 전까진 설치 언어를 따름).
   WiX는 실행 중 언어 전환이 안 돼 **언어마다 MSI가 따로** 나온다(`Markwiz_<ver>_x64_ko-KR.msi`/`_en-US.msi`, 한국어는 코드페이지 949라
   MSI 안에 한글이 들어가도 된다 — 단 `fileAssociations.description`은 en-US 빌드가 1252라 여전히 ASCII). 예제 문서(`editor.initialContent`)는
-  사용자가 손대기 전(`pristineHtml`)이면 언어 전환에 맞춰 교체된다. 테스트는 한국어 UI를 가정하므로 `src/test/setup.ts`가 매번 `ko`로 되돌린다.
-  웹에는 메뉴 바가 없어 언어 전환 UI가 없다(브라우저 언어만 따름). macOS 네이티브 메뉴의 체크 항목/재구성은 코드만 작성했고 실행 검증은 못 했다.
+  그 탭이 아직 손대지 않았으면(`tab.dirty === false`) 언어 전환에 맞춰 교체된다. 테스트는 한국어 UI를 가정하므로 `src/test/setup.ts`가 매번 `ko`로 되돌린다.
+  웹도 메뉴 바의 도움말 > 언어에서 전환한다(고른 값이 없으면 브라우저 언어). macOS 네이티브 메뉴의 체크 항목/재구성은 코드만 작성했고 실행 검증은 못 했다.
   NSIS 설치 프로그램은 내용이 압축돼 있어 빌드 후 문자열을 검색해 검증할 수 없다(빌드 성공까지만 확인). MSI는 `dark.exe`
   (`%LOCALAPPDATA%\tauri\WixTools314`)로 풀어 대화상자 문자열과 `Installer Language` 값을 확인했다
+- **다중 문서 탭**: `src/commands/tabsState.ts`가 열려 있는 탭 목록(`DocumentTab[]` — id/path/name/dirty)과 활성 탭 id를 들고 있는
+  유일한 소스다. **탭마다 독립된 Tiptap `Editor` 인스턴스**가 있고(`src/editor/DocumentPane.tsx`), 비활성 탭도 계속 마운트해
+  둔 채 `hidden`(=display:none)으로만 숨긴다 — 그래야 탭을 오가도 실행 취소 기록/커서/스크롤 위치/다이어그램 NodeView 상태가
+  남는다(소스 모드의 기존 "숨기기만 하고 언마운트 안 함" 패턴과 동일). `Editor.tsx`는 모든 탭의 `DocumentPane`을 렌더링하면서
+  각자가 등록하는 Editor 인스턴스를 `Map<tabId, Editor>`로 모아 두고, 그중 활성 탭의 Editor만 Ribbon/StatusBar/MenuBar/Sidebar/
+  InsertDialog 등 기존 "단일 에디터" 컴포넌트에 그대로 넘긴다 — 그래서 탭이 여러 개가 돼도 그 컴포넌트들은 고칠 필요가 없었다.
+  - **기존 `documentState.ts`(path/name)는 "활성 탭"만 보여주는 하위 호환 창구**로 남겨 뒀다(대부분의 코드가 이것만 쓰면 된다).
+    `useSyncExternalStore`는 상태가 안 바뀌면 `getSnapshot()`이 매번 같은 참조를 돌려줘야 하므로, 매번 새 객체를 만들지 않고
+    path/name이 실제로 바뀐 경우에만 새로 만든다(안 그러면 "Maximum update depth exceeded" 무한 루프가 난다)
+  - **이미지의 상대 경로/`file://` 해석은 전역 `documentState`가 아니라 `editor.storage.documentMeta.path`(그 에디터 자신의 경로)로
+    읽는다**(`src/editor/extensions/documentMeta.ts`) — 화면에 안 보이는 다른 탭의 이미지가 활성 탭의 경로로 잘못 풀리면 안 되기 때문
+  - **파일을 열 때의 규칙**(`fileCommands.ts`의 `loadIntoTabs`): 같은 경로가 이미 열려 있으면 그 탭으로 옮기기만 하고 디스크에서
+    다시 읽지 않는다(편집 중인 내용을 덮어쓰지 않으려는 의도 — "최근에 연 파일"로 또 열 때도 동일). 그 외에는 활성 탭이
+    아직 손대지 않은 빈 "제목 없음"이면 그 탭을 재사용하고, 아니면 새 탭을 연다. `file.new`는 항상 새 빈 탭을 연다(기존 탭은
+    건드리지 않음) — Typora에는 없는 동작이라 Typora 단축키 표와 무관하게 결정했다
+  - **탭 전환/닫기에는 단축키를 두지 않았다**(마우스로만) — 브라우저에 배포했을 때 Ctrl+W(탭 닫기)/Ctrl+Tab(탭 전환)은 페이지가
+    `preventDefault`해도 브라우저 자신의 탭을 닫거나 전환해 버려서 안전하지 않기 때문
+  - **탭을 소스 모드로 보는 중에 다른 탭으로 옮기면 소스 모드가 꺼진다**(`tabCommands.ts`의 `activateTab`이 떠나는 탭에
+    `view.sourceMode` 커맨드를 한 번 더 실행해 textarea 내용을 반영한 뒤 끈다) — 탭마다 소스 모드를 따로 두지 않고 단순화
+  - **dirty(바뀐 내용) 추적**: 사용자의 실제 편집(`editor.on('update')`)에서만 켠다. 파일을 불러올 때도 `setContent`가 'update'를
+    내길래(경로가 콘텐츠보다 먼저 반영됐는지 보는 기존 테스트가 이 이벤트에 기대고 있어 `emitUpdate:false`로 막을 수 없었다)
+    `editor.storage.documentMeta.loading` 플래그로 불러오는 동안만 무시한다. 되돌리기(Undo)로 저장 시점 내용까지 돌아와도
+    dirty는 그대로 켜져 있다(한 방향 플래그, 추가 추적 안 함)
+  - **바뀐 내용이 있는 탭을 닫으려 하면** `CloseTabDialog`(저장/저장 안 함/취소)가 뜬다. "저장"은 그 탭을 활성화한 뒤
+    `file.save`와 같은 로직(`saveActiveDocument`, 둘이 공유)을 실행한다 — "다른 이름으로 저장" 대화상자를 취소하면 탭을 닫지 않는다
+  - 마지막 탭을 닫으면 항상 빈 탭 하나를 새로 연다(탭이 하나도 없는 상태를 만들지 않음)
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6) 완료. 테스트는 Vitest(227개) + Rust `cargo test`(5개), `pnpm test`
-- 현재 버전 **0.1.2**(2026-09-23). 이전: 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6), 다중 문서 탭 완료. 테스트는 Vitest(259개) + Rust `cargo test`(5개), `pnpm test`
+- 현재 버전 **0.1.3**(2026-10-29). 이전: 0.1.2(2026-09-23), 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
   함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)
 

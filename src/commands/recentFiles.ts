@@ -14,7 +14,8 @@ let recent: RecentFile[] | null = null;
 const listeners = new Set<() => void>();
 
 // 윈도우 경로(드라이브 문자/UNC)는 대소문자를 구분하지 않고 `\`와 `/`가 같다.
-function samePath(a: string, b: string): boolean {
+// tabsState.ts(열려 있는 탭 중복 확인)도 이 비교 규칙을 그대로 쓴다.
+export function samePath(a: string, b: string): boolean {
   const normalize = (path: string) => path.replace(/\\/g, '/');
   const [x, y] = [normalize(a), normalize(b)];
   return /^([a-zA-Z]:|\/\/)/.test(x) ? x.toLowerCase() === y.toLowerCase() : x === y;

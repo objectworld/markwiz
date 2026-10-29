@@ -95,7 +95,12 @@ function recentFilesSubmenu(files: readonly RecentFile[]): MenuEntry {
   };
 }
 
-export function buildMenuModel(keymap: KeymapConfig, recentFiles: readonly RecentFile[] = []): MenuGroup[] {
+// showRecent: 최근 파일은 `openFileAt`이 있는 데스크탑에서만 기록되므로 웹의 메뉴에서는 항목 자체를 뺀다.
+export function buildMenuModel(
+  keymap: KeymapConfig,
+  recentFiles: readonly RecentFile[] = [],
+  { showRecent = true }: { showRecent?: boolean } = {},
+): MenuGroup[] {
   const entries = (actions: RibbonAction[]) => actions.map((action) => toEntry(action, keymap));
 
   return [
@@ -106,7 +111,7 @@ export function buildMenuModel(keymap: KeymapConfig, recentFiles: readonly Recen
         { kind: 'separator' },
         // 리본에서는 별도 "내보내기" 그룹이지만, 메뉴에서는 Typora처럼 파일 메뉴의 서브메뉴다.
         { kind: 'submenu', text: exportMenuText(), entries: entries(exportActions) },
-        recentFilesSubmenu(recentFiles),
+        ...(showRecent ? [recentFilesSubmenu(recentFiles)] : []),
       ],
     },
     { text: t('group.edit'), entries: entries(historyActions) },

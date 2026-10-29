@@ -77,6 +77,12 @@ describe('파일 > 최근에 연 파일', () => {
     expect(entries.filter((entry) => entry.kind === 'item' && entry.id.startsWith('recent:'))).toHaveLength(10);
   });
 
+  it('is left out of the file menu when showRecent is false (web)', () => {
+    const file = buildMenuModel(loadKeymap(), recentFiles, { showRecent: false })[0];
+    expect(file.entries.some((entry) => entry.kind === 'submenu' && entry.text === recentMenuText())).toBe(false);
+    expect(file.entries.some((entry) => entry.kind === 'submenu' && entry.text === exportMenuText())).toBe(true);
+  });
+
   it('keeps the file menu top-level items identical to the ribbon file group', () => {
     const names = buildMenuModel(loadKeymap(), recentFiles)[0].entries.flatMap((entry) => (entry.kind === 'item' ? [entry.text] : []));
     expect(names).toEqual(['새로 만들기', '열기', '저장', '다른 이름으로 저장']);
