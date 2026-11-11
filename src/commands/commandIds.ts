@@ -3,6 +3,7 @@ export const COMMAND_IDS = [
   'file.open',
   'file.save',
   'file.saveAs',
+  'file.print',
   'format.bold',
   'format.italic',
   'format.strike',
@@ -27,6 +28,9 @@ export const COMMAND_IDS = [
   'view.sourceMode',
   'view.focusMode',
   'view.typewriterMode',
+  'view.zoomIn',
+  'view.zoomOut',
+  'view.actualSize',
 ] as const;
 
 export type CommandId = (typeof COMMAND_IDS)[number];

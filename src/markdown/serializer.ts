@@ -1,6 +1,7 @@
 import { MarkdownSerializer, type MarkdownSerializerState } from 'prosemirror-markdown';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { alignToGfm, backticksFor, escapeTableCell } from './schema-map';
+import { hasMergedCells, tableToHtml } from './tableHtml';
 
 function serializeCell(node: ProseMirrorNode): string {
   return markdownSerializer.serialize(node, { tightLists: true }).trim();
@@ -71,6 +72,12 @@ export const markdownSerializer: MarkdownSerializer = new MarkdownSerializer(
       state.write(`![${alt}](${node.attrs.src}${title})`);
     },
     table(state, node) {
+      // GFM은 셀 병합을 표현할 수 없어서, 병합된 셀이 있는 표만 HTML 표로 저장한다.
+      if (hasMergedCells(node)) {
+        state.write(tableToHtml(node));
+        state.closeBlock(node);
+        return;
+      }
       const rows: string[] = [];
       let separator = '';
       node.forEach((row, _offset, rowIndex) => {

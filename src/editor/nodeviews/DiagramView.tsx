@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NodeViewContent, NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import { t, useLanguage } from '../../i18n/i18n';
+import { DiagramDialog } from './DiagramDialog';
 import { DiagramToggle, type DiagramViewMode } from './DiagramToggle';
 import { useDebouncedValue } from './useDebouncedValue';
 
@@ -8,6 +9,8 @@ interface DiagramViewProps extends ReactNodeViewProps {
   type: string;
   render: (source: string) => Promise<string>;
 }
+
+const DIAGRAM_NAMES: Record<string, string> = { mermaid: 'Mermaid', plantuml: 'PlantUML' };
 
 // Mermaid/PlantUML이 공유하는 다이어그램 노드뷰. 렌더러만 바꿔 끼운다.
 // ProseMirror의 contentDOM(NodeViewContent)은 항상 마운트된 상태를 유지해야
@@ -22,6 +25,8 @@ export function DiagramView({ node, type, render }: DiagramViewProps) {
   const [mode, setMode] = useState<DiagramViewMode>(() => (node.textContent.trim() ? 'preview' : 'code'));
   const [svg, setSvg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // 그림을 클릭하면 확대·축소할 수 있는 팝업을 연다.
+  const [enlarged, setEnlarged] = useState(false);
 
   const source = node.textContent;
   const debouncedSource = useDebouncedValue(source, 400);
@@ -62,9 +67,19 @@ export function DiagramView({ node, type, render }: DiagramViewProps) {
         contentEditable={false}
       >
         {error && <div className="markwiz-diagram-error">{error}</div>}
-        {!error && svg && <div className="markwiz-diagram-svg" dangerouslySetInnerHTML={{ __html: svg }} />}
+        {!error && svg && (
+          <div
+            className="markwiz-diagram-svg markwiz-diagram-enlargeable"
+            title={t('diagram.enlarge')}
+            onClick={() => setEnlarged(true)}
+            dangerouslySetInnerHTML={{ __html: svg }}
+          />
+        )}
         {!error && !svg && <div className="markwiz-diagram-empty">{t('diagram.empty')}</div>}
       </div>
+      {enlarged && svg && (
+        <DiagramDialog svg={svg} title={t('diagram.viewTitle', { type: DIAGRAM_NAMES[type] ?? type })} onClose={() => setEnlarged(false)} />
+      )}
     </NodeViewWrapper>
   );
 }

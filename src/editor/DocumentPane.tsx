@@ -1,12 +1,13 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { patchTab, takePendingContent, type DocumentTab } from '../commands/tabsState';
-import { useViewState } from '../commands/viewState';
+import { clampZoom, getViewState, setViewState, useViewState } from '../commands/viewState';
 import { t, useLanguage } from '../i18n/i18n';
 import { parseMarkdown } from '../markdown/parser';
 import { editorExtensions } from './extensions';
 import { SourceEditor } from './SourceEditor';
+import { findCellElement, selectCellForMenu, TableContextMenu } from './TableContextMenu';
 import { scrollCaretToCenter } from './typewriter';
 
 // 탭 하나를 그린다. 활성 탭이 아니어도 계속 마운트된 채로 숨겨 둔다(hidden=display:none) —
@@ -34,6 +35,8 @@ export function DocumentPane({
   const scrollRef = useRef<HTMLElement>(null);
   const view = useViewState();
   const language = useLanguage();
+  // 표 안에서 오른쪽 버튼을 눌렀을 때의 메뉴 위치(null이면 닫힘).
+  const [tableMenu, setTableMenu] = useState<{ x: number; y: number } | null>(null);
 
   // 파일을 열어서 만들어진 탭은 마크다운 원문을 들고 있다가, 이 에디터의 schema가 생기는 시점에
   // (=에디터가 만들어진 직후) 한 번 파싱해 넣는다. 화면에 그리기 전에 끝내야 빈 문서가 잠깐
@@ -90,13 +93,29 @@ export function DocumentPane({
     };
   }, [editor, isActive, view.typewriterMode, view.sourceMode]);
 
+  // Ctrl(Cmd)+휠 / 트랙패드 핀치로 문서를 확대·축소한다. 브라우저 기본 페이지 확대로 넘어가지 않도록
+  // preventDefault가 필요해서(React의 onWheel은 passive라 불가) 직접 non-passive 리스너를 단다.
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element || !isActive) return;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      // 마우스 휠 한 칸(deltaY 100)이 10%, 핀치처럼 작은 값은 그만큼 부드럽게.
+      const step = (Math.max(-100, Math.min(100, event.deltaY)) / 100) * 0.1;
+      setViewState({ zoom: clampZoom(getViewState().zoom - step) });
+    };
+    element.addEventListener('wheel', onWheel, { passive: false });
+    return () => element.removeEventListener('wheel', onWheel);
+  }, [isActive]);
+
   const showSource = isActive && view.sourceMode;
 
   return (
     <main
       ref={scrollRef}
       hidden={!isActive}
-      className={`flex-1 overflow-y-auto py-6 ${isActive && view.focusMode ? 'markwiz-focus-mode' : ''}`}
+      className={`flex-1 overflow-auto px-4 py-6 ${isActive && view.focusMode ? 'markwiz-focus-mode' : ''}`}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) editor?.commands.focus('end');
       }}
@@ -105,12 +124,22 @@ export function DocumentPane({
       {/* 소스 모드에서도 에디터(다이어그램 NodeView 포함)를 언마운트하지 않고 숨기기만 한다. */}
       <div
         hidden={showSource}
-        className="markwiz-paper mx-auto min-h-[1000px] w-[816px] max-w-[calc(100%-32px)] border border-chrome-border bg-white px-[72px] py-[72px] shadow-[0_1px_3px_rgba(61,57,41,0.12)]"
+        style={{ zoom: view.zoom }}
+        className="markwiz-paper mx-auto min-h-[1123px] w-[794px] shrink-0 border border-chrome-border bg-white px-[72px] py-[72px] shadow-[0_1px_3px_rgba(61,57,41,0.12)]"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) editor?.commands.focus('end');
         }}
+        onContextMenu={(event) => {
+          if (!editor || view.sourceMode) return;
+          const cell = findCellElement(editor, event.target);
+          if (!cell) return;
+          event.preventDefault();
+          selectCellForMenu(editor, cell);
+          setTableMenu({ x: event.clientX, y: event.clientY });
+        }}
       >
         <EditorContent editor={editor} />
+        {editor && tableMenu && <TableContextMenu editor={editor} x={tableMenu.x} y={tableMenu.y} onClose={() => setTableMenu(null)} />}
       </div>
       {/* 타자기 모드에서 문서 끝 줄도 화면 중앙까지 올라올 수 있도록 여백을 둔다. */}
       {isActive && view.typewriterMode && <div aria-hidden className="markwiz-typewriter-spacer" style={{ height: '50vh' }} />}

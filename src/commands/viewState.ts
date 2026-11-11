@@ -11,9 +11,13 @@ export interface InsertRequest {
 
 export interface ViewState {
   sidebar: boolean;
+  // 개요 영역(사이드바) 폭(px). 경계를 끌어서 바꾼다.
+  sidebarWidth: number;
   sourceMode: boolean;
   focusMode: boolean;
   typewriterMode: boolean;
+  // 문서 확대/축소 배율(1 = 100%). 문서 종이와 소스 모드에만 적용되고 리본/메뉴는 그대로다.
+  zoom: number;
   // 도움말(README) 창 표시 여부
   help: boolean;
   // 정보(버전/소개) 창 표시 여부
@@ -28,11 +32,42 @@ export interface ViewState {
   closeTabConfirm: string | null;
 }
 
+export const SIDEBAR_DEFAULT_WIDTH = 256;
+export const SIDEBAR_MIN_WIDTH = 160;
+export const SIDEBAR_MAX_WIDTH = 640;
+const SIDEBAR_WIDTH_KEY = 'markwiz:sidebar-width';
+
+// 창이 좁을 때 문서 영역이 사라지지 않도록 창 폭에 맞춰서도 상한을 둔다.
+export function clampSidebarWidth(width: number): number {
+  const max = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, window.innerWidth - 200));
+  return Math.min(max, Math.max(SIDEBAR_MIN_WIDTH, Math.round(width)));
+}
+
+// 개요 영역 폭은 사용자가 바꾼 값을 기억한다(저장소를 못 쓰면 기본값).
+function readStoredSidebarWidth(): number {
+  try {
+    const stored = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY));
+    return stored >= SIDEBAR_MIN_WIDTH && stored <= SIDEBAR_MAX_WIDTH ? stored : SIDEBAR_DEFAULT_WIDTH;
+  } catch {
+    return SIDEBAR_DEFAULT_WIDTH;
+  }
+}
+
+export function saveSidebarWidth(width: number): void {
+  try {
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, String(width));
+  } catch {
+    // 저장 못 해도 이번 실행 동안은 그대로 쓴다.
+  }
+}
+
 const initialState: ViewState = {
   sidebar: true,
+  sidebarWidth: readStoredSidebarWidth(),
   sourceMode: false,
   focusMode: false,
   typewriterMode: false,
+  zoom: 1,
   help: false,
   about: false,
   insert: null,
@@ -40,6 +75,13 @@ const initialState: ViewState = {
   sourceText: '',
   closeTabConfirm: null,
 };
+
+export const MIN_ZOOM = 0.5;
+export const MAX_ZOOM = 3;
+
+export function clampZoom(zoom: number): number {
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(zoom * 1000) / 1000));
+}
 
 let state: ViewState = initialState;
 const listeners = new Set<() => void>();

@@ -31,6 +31,11 @@ export function toTauriAccelerator(combo: string): string {
   return [...modifiers, normalizedKey].join('+');
 }
 
+const PUNCTUATION_CODES: Record<string, string[]> = {
+  '=': ['Equal', 'NumpadAdd'],
+  '-': ['Minus', 'NumpadSubtract'],
+};
+
 // 키보드 이벤트가 "Ctrl+Shift+1" 같은 조합 문자열과 일치하는지 판별한다.
 // 에디터에 포커스가 없을 때(소스 모드 textarea, 웹 등) view.* 단축키를 처리하는 데 쓴다.
 export function matchesShortcut(
@@ -58,5 +63,8 @@ export function matchesShortcut(
 
   // Shift+숫자는 event.key가 '!'처럼 바뀌므로 물리 키(code)로 비교한다.
   if (/^[0-9]$/.test(key)) return event.code === `Digit${key}`;
+  // Shift+= / Shift+- 도 event.key가 '+' / '_'로 바뀐다(숫자패드 +/-도 같은 동작으로 본다).
+  const physical = PUNCTUATION_CODES[key];
+  if (physical) return physical.includes(event.code);
   return event.key.toLowerCase() === key.toLowerCase();
 }

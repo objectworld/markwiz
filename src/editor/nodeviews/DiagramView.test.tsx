@@ -1,5 +1,5 @@
 import { EditorContent, useEditor } from '@tiptap/react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { editorExtensions } from '../extensions';
 
@@ -46,6 +46,23 @@ describe('Diagram node view', () => {
       await screen.findByText('코드 보기');
       expect(renderPlantumlMock).not.toHaveBeenCalled();
     });
+  });
+
+  it('opens the zoomable popup when the rendered diagram is clicked, and closes it with Escape', async () => {
+    renderPlantumlMock.mockResolvedValue('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><text>Alice</text></svg>');
+    render(<TestEditor content={'<pre><code class="language-plantuml">Alice -&gt; Bob : hi</code></pre>'} />);
+    const rendered = await waitFor(() => {
+      const el = document.querySelector('.markwiz-diagram-svg');
+      expect(el).toBeTruthy();
+      return el as HTMLElement;
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    fireEvent.click(rendered);
+    expect(screen.getByRole('dialog', { name: 'PlantUML 다이어그램' })).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('defaults a freshly created empty block to code mode so the caret can land in it', async () => {

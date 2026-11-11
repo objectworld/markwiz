@@ -1,7 +1,7 @@
 import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { useDocumentState } from '../commands/useDocumentState';
-import { useViewState } from '../commands/viewState';
+import { setViewState, useViewState } from '../commands/viewState';
 import { t, useLanguage } from '../i18n/i18n';
 
 const BLOCK_LABEL_KEYS = {
@@ -53,7 +53,7 @@ export function StatusBar({ editor }: { editor: Editor | null }) {
   useLanguage();
   const status = useStatusState(editor);
   const document = useDocumentState();
-  const { notice } = useViewState();
+  const { notice, zoom } = useViewState();
 
   return (
     <footer
@@ -73,6 +73,15 @@ export function StatusBar({ editor }: { editor: Editor | null }) {
       )}
       <span className="ml-auto">{status?.block ?? t('block.body')}</span>
       <span>Markdown</span>
+      <button
+        type="button"
+        title={t('status.zoomTitle', { n: Math.round(zoom * 100) })}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => setViewState({ zoom: 1 })}
+        className="-my-0.5 rounded px-1 tabular-nums hover:bg-chrome-hover"
+      >
+        {t('status.zoom', { n: Math.round(zoom * 100) })}
+      </button>
     </footer>
   );
 }

@@ -10,7 +10,7 @@ A Typora-style WYSIWYG Markdown editor built on Tiptap (ProseMirror). It renders
 PlantUML diagrams entirely client-side, with no backend server required. Web and desktop (Tauri)
 share the same codebase.
 
-**Current version: 0.1.3** (2026-10-29). See the [release notes](#release-notes) for what changed.
+**Current version: 0.1.4** (2026-11-12). See the [release notes](#release-notes) for what changed.
 
 ![Markwiz screenshot](docs/images/screenshot.png)
 
@@ -24,8 +24,8 @@ share the same codebase.
   whether to save first.
 - **Diagrams** — ` ```mermaid ` and ` ```plantuml ` code blocks render as diagrams. No backend
   server needed.
-- **Export to PDF / Word** — both printing (PDF) and generating a real `.docx` (Word) happen in the
-  browser/webview, with no server involved.
+- **Print and export to PDF / Word / HTML** — printing (PDF), generating a real `.docx` (Word), and writing a single
+  `.html` file all happen in the browser/webview, with no server involved.
 - **Typora-identical shortcuts** — `keymap.json` maps Windows/Linux and macOS separately and can be
   edited directly to remap keys.
 - **Word-style ribbon toolbar + status bar** — formatting/insert buttons, word/character counts,
@@ -47,9 +47,9 @@ Grab the latest installer from the [Releases page](https://github.com/objectworl
 
 | File | Description |
 |---|---|
-| `Markwiz_0.1.3_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `Markwiz_0.1.3_x64_en-US.msi` | MSI package (English) |
-| `Markwiz_0.1.3_x64_ko-KR.msi` | MSI package (Korean) |
+| `Markwiz_0.1.4_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
+| `Markwiz_0.1.4_x64_en-US.msi` | MSI package (English) |
+| `Markwiz_0.1.4_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation (requires WebView2 runtime) |
 
 The app isn't code-signed, so Windows SmartScreen may warn on first launch ("More info → Run
@@ -128,9 +128,9 @@ Artifacts are written to `src-tauri/target/release/`.
 
 | File | Description |
 |---|---|
-| `bundle/nsis/Markwiz_0.1.3_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `bundle/msi/Markwiz_0.1.3_x64_en-US.msi` | MSI package (English) |
-| `bundle/msi/Markwiz_0.1.3_x64_ko-KR.msi` | MSI package (Korean) |
+| `bundle/nsis/Markwiz_0.1.4_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
+| `bundle/msi/Markwiz_0.1.4_x64_en-US.msi` | MSI package (English) |
+| `bundle/msi/Markwiz_0.1.4_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation |
 
 - Running the exe alone (without an installer) requires the **WebView2 runtime** on the target PC.
@@ -169,7 +169,7 @@ support mobile. The web favicon is `public/favicon.svg`.
 | Window title | Current document name (`document.md - Markwiz`) |
 | Menu bar (desktop) | File / Edit / Font / Paragraph / Insert / Diagram / View / Help. Mirrors the toolbar, with shortcuts shown alongside each item. Export lives in the **File > Export** submenu |
 | Toolbar | File / Edit (undo·redo) / Font / Paragraph / Insert / Diagram / Export / View groups. Hover a button to see its name and shortcut |
-| Sidebar | Document outline (heading list). Open by default; toggle with `Ctrl+Shift+L` |
+| Sidebar | Document outline (heading list). Open by default; toggle with `Ctrl+Shift+L`. Drag its right edge to resize it (double-click to reset); the width is remembered |
 | Document area | An ivory-colored workspace with a single sheet of white paper. Clicking empty space still starts editing |
 | Status bar | Document name, word count, character count (excluding spaces), selected character count, current block type |
 
@@ -223,6 +223,33 @@ Tables and footnotes are inserted from the toolbar's **Insert** button (or `Ctrl
 Opening a Markdown file that already contains `|` tables or `[^1]` footnotes reads them as tables
 and footnotes as-is.
 
+#### Editing tables (right-click)
+
+**Right-click** inside a table to open a menu.
+
+- **Insert row above/below, delete row, insert column left/right, delete column, delete table** —
+  applied relative to the cell you right-clicked.
+- **Merge cells** — drag with the mouse to select several cells, then right-click one of the
+  selected cells (the selection is kept only if you click inside it). The item is disabled unless
+  several cells are selected.
+- **Split cell** — available when a single merged cell is selected.
+- GFM tables can't express merged cells, so **only tables that contain a merge** are saved as an
+  HTML `<table>` inside the Markdown. Reopening restores the merge as-is, and tables without
+  merges are still saved as `|` tables. (Other Markdown viewers such as GitHub show it as an HTML
+  table.)
+- The keyboard context-menu key (`Shift+F10`) opens it too.
+
+### Zoom
+
+Zooms the document (the paper) and source code mode; the toolbar and menus stay the same size.
+The range is 50%–300%.
+
+- The zoom in / zoom out / actual size buttons in the toolbar's **View** group, **View** in the
+  menu, or shortcuts (`Ctrl+Shift+=` zoom in, `Ctrl+Shift+-` zoom out, `Ctrl+Shift+9` actual size)
+- Hold `Ctrl` (`Cmd` on macOS) and use the mouse wheel / trackpad pinch
+- Click the zoom level on the right of the status bar (e.g. `120%`) to go back to 100%
+- Zoom isn't applied when printing or exporting to PDF/HTML
+
 ### Opening and saving files
 
 | Action | Shortcut (Windows/Linux) | Description |
@@ -231,6 +258,7 @@ and footnotes as-is.
 | Open | `Ctrl+O` | `.md` / `.markdown` file |
 | Save | `Ctrl+S` | Overwrites the open file, or falls back to "Save As" if none is open |
 | Save As | `Ctrl+Shift+S` | |
+| Print | `Ctrl+P` | The system print dialog (see "Printing and exporting" below) |
 
 - **Desktop app**: uses the OS's file open/save dialogs and writes to the real file. The same
   actions are also available from the top menu (File, etc.).
@@ -287,11 +315,18 @@ Alice -> Bob : Hello
 - PlantUML is fairly large (~5MB), so it's loaded on a separate thread the **first time** a
   PlantUML block appears in the document. The first render can take a few seconds; later ones are
   fast. `@startuml`/`@enduml` can be omitted.
+- **Clicking a diagram opens a popup** where you can look at it larger. Inside it, the `+`/`-`
+  buttons and `Ctrl` + mouse wheel zoom just that diagram (10%–800%), you can drag to pan, and there
+  are **fit to window** / **100%** buttons. `Esc` or a click outside closes it. It's independent
+  of the document zoom.
 
-### Exporting to PDF / Word
+### Printing and exporting to PDF / Word / HTML
 
-The two buttons in the toolbar's **Export** group (also under **File > Export** in the menu) save the current document in
+**Print** (`Ctrl+P`, the toolbar's File group, **File > Print**) opens the system print dialog. The three buttons in the toolbar's **Export** group (also under **File > Export** in the menu) save the current document in
 another format.
+
+- **Print**: uses the same print layout as PDF below (menu, toolbar, sidebar, and status bar left out; diagrams as images). The paper is the same A4 width as on screen, so line breaks match what you see.
+- **Export to HTML**: saves what is rendered on screen, with its CSS, as one standalone `.html` file. Diagrams become their rendered SVG, code blocks keep their syntax highlighting, and checkboxes stay as read-only boxes. Local images (`file://`, relative paths) are embedded as PNG data so they still show after the file is moved; internet (`https:`) images keep their address. A local image that can't be read is replaced by its alt text. Opened in a browser it looks like the same A4 sheet as on screen, and printing it gives a normal document with 0.75in margins. Pressing it in Source Code Mode switches back to the preview first (a notice appears and nothing is exported if that fails).
 
 - **Export to PDF**: uses the browser's/webview's print feature. Pick "Save as PDF" ("Microsoft
   Print to PDF" on Windows) in the print dialog. The menu, toolbar, sidebar, and status bar are
@@ -327,6 +362,7 @@ full list is in [`src/commands/keymap.json`](src/commands/keymap.json).
 | Insert table ★ | `Ctrl+T` | `Cmd+Alt+T` |
 | Link | `Ctrl+K` | `Cmd+K` |
 | Image ★ | `Ctrl+Shift+I` | `Cmd+Control+I` |
+| Zoom in / out / actual size | `Ctrl+Shift+=` / `Ctrl+Shift+-` / `Ctrl+Shift+9` | `Cmd+Shift+=` / `Cmd+Shift+-` / `Cmd+Shift+9` |
 
 ### Remapping shortcuts
 
@@ -372,10 +408,22 @@ full list is in [`src/commands/keymap.json`](src/commands/keymap.json).
 - The web version's menu bar has no Recently Opened Files (the web can't remember file paths).
 - PlantUML's `!theme`, standard library includes (`!include <...>`), and dark mode aren't
   supported.
-- Merged table cells that can't be expressed in GFM (colspan/rowspan) aren't preserved on save.
+- Tables with merged cells are saved as an HTML `<table>`, so other viewers such as GitHub show them
+  as HTML tables. A hand-written HTML table is read as a table only if it starts with `<table` and ends with `</table>`; other HTML
+  stays as literal text.
 - Only a light theme is supported.
 
 ## Release notes
+
+### 0.1.4 (2026-11-12)
+
+- **Print**: `Ctrl+P` (`Cmd+P` on macOS), the Print button in the toolbar's File group, or **File > Print**. The menu, toolbar, sidebar, and status bar are left out and diagrams print as images
+- **Export to HTML**: added to the Export group/submenu. Saves one standalone `.html` file with styles, diagrams, and images included
+- **Document zoom**: `Ctrl+Shift+=` / `Ctrl+Shift+-` / `Ctrl+Shift+9` (actual size), `Ctrl`+wheel/pinch, and the zoom button in the status bar. The paper is always A4 wide and its width scales with the zoom, so it looks like the printed page
+- **Diagram popup**: click a rendered Mermaid/PlantUML diagram to open a window where you can zoom and drag it independently of the document
+- **Table right-click menu**: insert/delete rows and columns, merge/split cells, delete the table. Tables with merged cells are saved as an HTML `<table>` inside the Markdown because GFM can't express them
+- **Resizable outline panel**: drag its right edge or use the ←/→ keys; double-click to reset. The width is remembered
+- **Fixed marker position**: the Markdown marks that appear while you edit numbered lists, bullets, headings, quotes, and checkboxes (`1. `, `- `, `# `, …) now sit in the left margin instead of pushing the text sideways
 
 ### 0.1.3 (2026-10-29)
 
@@ -398,7 +446,7 @@ full list is in [`src/commands/keymap.json`](src/commands/keymap.json).
 - **Export to PDF / Word**: a new "Export" group in the toolbar and menu. PDF uses the
   browser's/webview's print feature; Word is built by converting the document tree directly into a
   `.docx` (headings, formatting, lists, tables, footnotes, images, and diagrams included). See
-  [Exporting to PDF / Word](#exporting-to-pdf--word) for details
+  [Printing and exporting to PDF / Word / HTML](#printing-and-exporting-to-pdf--word--html) for details
 - **`.md`/`.markdown` file association**: installing via an installer (NSIS/MSI) lets you
   double-click `.md` files in File Explorer to open them directly. Both installers show a checkbox
   (checked by default) asking whether to associate the file type. If Markwiz is already open, files
@@ -428,7 +476,7 @@ First release.
   conversion keeps content identical after saving and reopening
 - **Shortcuts**: the full Typora shortcut mapping, remappable via `keymap.json`
 - **Screen**: Word-style toolbar and status bar, desktop menu bar, document outline sidebar
-- **View modes**: Source Code Mode, Focus Mode, Typewriter Mode
+- **View modes**: Source Code Mode, Focus Mode, Typewriter Mode, zoom
 - **Link/image insert dialog**: type a web address or choose a file from your computer
 - **Help**: view this README inside the app from the Help menu, and check Markwiz's version/intro
 - **Distribution**: Windows x64 installer (NSIS), MSI, standalone executable. Not code-signed
@@ -443,7 +491,7 @@ src/
   menu/          Desktop menu bar, menu model, Help dialog
   commands/      Command registry, keymap.json, file commands
   markdown/      Markdown <-> document tree conversion (round-trip tests included)
-  export/        PDF (print) / Word (.docx) export
+  export/        Print / PDF (print) / Word (.docx) / HTML export
   platform/      Web / desktop platform abstraction (file open/save, native menu)
   workers/       PlantUML rendering Web Worker
 src-tauri/       Tauri (Rust) desktop wrapper and icons
@@ -459,7 +507,7 @@ Development conventions and design decisions are documented in [`CLAUDE.md`](CLA
 - **Desktop**: [Tauri](https://tauri.app) v2
 - **Diagrams**: [Mermaid](https://mermaid.js.org), [`@plantuml/core`](https://www.npmjs.com/package/@plantuml/core) (PlantUML compiled via TeaVM)
 - **Markdown**: markdown-it + prosemirror-markdown
-- **Export**: PDF via browser print, Word via [`docx`](https://www.npmjs.com/package/docx)
+- **Export**: PDF via browser print, Word via [`docx`](https://www.npmjs.com/package/docx), HTML from the cleaned-up rendered DOM
 - **Tests**: Vitest
 
 ## License

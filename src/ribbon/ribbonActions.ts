@@ -4,6 +4,7 @@ import {
   Code,
   FileOutput,
   FileType2,
+  Globe,
   Focus,
   FileCode,
   FilePlus,
@@ -16,6 +17,7 @@ import {
   ListTree,
   ListOrdered,
   Minus,
+  Printer,
   Quote,
   Redo2,
   RemoveFormatting,
@@ -25,6 +27,9 @@ import {
   Superscript,
   Type,
   Table,
+  Scan,
+  ZoomIn,
+  ZoomOut,
   Undo2,
   Waypoints,
   Workflow,
@@ -36,6 +41,7 @@ import { getViewState } from '../commands/viewState';
 import { t } from '../i18n/i18n';
 import type { MessageKey } from '../i18n/messages';
 import { exportDocx } from '../export/exportDocx';
+import { exportHtml } from '../export/exportHtml';
 import { exportPdf } from '../export/exportPdf';
 
 export interface RibbonAction {
@@ -87,6 +93,7 @@ export const fileActions: RibbonAction[] = [
   fromCommand('file.open', 'action.file.open', FolderOpen),
   fromCommand('file.save', 'action.file.save', Save),
   fromCommand('file.saveAs', 'action.file.saveAs', SaveAll),
+  fromCommand('file.print', 'action.file.print', Printer),
 ];
 
 export const historyActions: RibbonAction[] = [
@@ -154,6 +161,7 @@ export const diagramActions: RibbonAction[] = [
 // PDF는 브라우저/웹뷰 인쇄 기능을 그대로 쓰고, Word는 문서 트리를 직접 .docx로 변환한다(둘 다
 // src/export/). 단축키가 없는 단발성 동작이라 레지스트리 커맨드로 만들지 않는다(insert.* 그룹과 동일한 방식).
 export const exportActions: RibbonAction[] = [
+  { id: 'export.html', labelKey: 'action.export.html', icon: Globe, run: (editor) => void exportHtml(editor) },
   { id: 'export.pdf', labelKey: 'action.export.pdf', icon: FileOutput, run: (editor) => exportPdf(editor) },
   { id: 'export.docx', labelKey: 'action.export.docx', icon: FileType2, run: (editor) => void exportDocx(editor) },
 ];
@@ -164,6 +172,9 @@ export const viewActions: RibbonAction[] = [
   { ...fromCommand('view.sourceMode', 'action.view.sourceMode', FileCode), isActive: () => getViewState().sourceMode },
   { ...fromCommand('view.focusMode', 'action.view.focusMode', Focus), isActive: () => getViewState().focusMode },
   { ...fromCommand('view.typewriterMode', 'action.view.typewriterMode', Type), isActive: () => getViewState().typewriterMode },
+  fromCommand('view.zoomOut', 'action.view.zoomOut', ZoomOut),
+  fromCommand('view.zoomIn', 'action.view.zoomIn', ZoomIn),
+  fromCommand('view.actualSize', 'action.view.actualSize', Scan),
 ];
 
 export const STYLE_OPTIONS = [

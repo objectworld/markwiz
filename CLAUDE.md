@@ -43,6 +43,7 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
    | file.new | Ctrl+N | Cmd+N |
    | file.save | Ctrl+S | Cmd+S |
    | file.saveAs | Ctrl+Shift+S | Cmd+Shift+S |
+   | file.print | Ctrl+P | Cmd+P |
    | format.bold | Ctrl+B | Cmd+B |
    | format.italic | Ctrl+I | Cmd+I |
    | format.clearFormat | Ctrl+\ | Cmd+\ |
@@ -103,7 +104,7 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   동시에 열어 편집할 수 있다. 바로 아래 "툴바는 탭 없이 한 줄" 규칙은 리본 안을 홈/삽입처럼 나누지 말라는
   뜻으로 이 문서 탭과는 무관하다(리본은 여전히 한 줄). 자세한 동작은 "구현 결정"의 "다중 문서 탭" 항목 참고
 - **툴바는 탭 없이 한 줄**(홈/삽입 탭으로 나누지 말 것). 그룹 순서와 구성:
-  - 파일: 새로 만들기, 열기, 저장, 다른 이름으로 저장
+  - 파일: 새로 만들기, 열기, 저장, 다른 이름으로 저장, 인쇄
   - 글꼴: **스타일 드롭다운**(본문, 제목 1~6) + 굵게, 기울임, 취소선, 인라인 코드, 서식 지우기
     (스타일은 별도 그룹이 아니라 글꼴 그룹 안에 둔다)
   - 단락: 글머리 기호, 번호 매기기, 확인란 목록, 인용
@@ -232,11 +233,39 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   - **바뀐 내용이 있는 탭을 닫으려 하면** `CloseTabDialog`(저장/저장 안 함/취소)가 뜬다. "저장"은 그 탭을 활성화한 뒤
     `file.save`와 같은 로직(`saveActiveDocument`, 둘이 공유)을 실행한다 — "다른 이름으로 저장" 대화상자를 취소하면 탭을 닫지 않는다
   - 마지막 탭을 닫으면 항상 빈 탭 하나를 새로 연다(탭이 하나도 없는 상태를 만들지 않음)
+- **문서 확대/축소**: `viewState.zoom`(1 = 100%, `MIN_ZOOM` 0.5 ~ `MAX_ZOOM` 3, `clampZoom`)이 소유하고, 커맨드 `view.zoomIn`/`zoomOut`/`actualSize`
+  (`viewCommands.ts`, 단축키는 Typora 표대로 `Ctrl+Shift+=`/`-`/`9`)가 바꾼다. 키보드/메뉴는 10% 눈금(`stepZoom`, 휠로 눈금 사이에 있으면 다음 눈금으로),
+  `Ctrl/Cmd+휠`·핀치는 `DocumentPane`의 non-passive wheel 리스너가 연속값으로 바꾼다(React `onWheel`은 passive라 `preventDefault` 불가).
+  적용은 종이(`.markwiz-paper`)와 `SourceEditor`에 **CSS `zoom`**을 거는 방식이다 — `transform: scale`은 레이아웃/스크롤 영역이 안 따라와서 쓰지 않았다.
+  종이는 **창 폭과 무관하게 항상 A4 폭(794px = 210mm)**이고 `zoom` 배율만큼 폭도 같이 커지고 작아진다(줄바꿈이 배율/창 크기와 무관하게 인쇄물과 같아야 해서 `max-w` 제한을
+  뺐다 — 창보다 넓으면 `main`이 가로 스크롤). 화면 종이 안쪽 여백 72px(0.75in)에 맞춰 `@page { margin: 0.75in }`로 인쇄 여백도 같게 했다. `@media print`는 `zoom: 1 !important`로 PDF에 반영하지 않는다.
+  `matchesShortcut`은 `=`/`-` 키를 `event.key`가 아니라 물리 키 코드(`Equal`/`Minus`, 숫자패드 포함)로 비교한다 — Shift를 누르면 `+`/`_`로 바뀌기 때문.
+  상태바 오른쪽 배율 버튼은 100%로 되돌린다. 확대 상태는 저장하지 않는다(새로 열면 100%).
+- **다이어그램 팝업**(`nodeviews/DiagramDialog.tsx`): 렌더링된 그림(`.markwiz-diagram-enlargeable`)을 클릭하면 `DiagramView`의 로컬 상태로 열린다(`createPortal`로
+  `document.body`에 그려서 문서 CSS `zoom`/NodeView DOM과 무관). 문서 확대/축소와는 **별개의 자기 배율**(10%~800%, 버튼은 ×1.25, 휠은 지수)을 갖고, 처음에는 창에 맞춘
+  배율(최대 200%)로 연다. 배율은 SVG의 `viewBox`(없으면 숫자 width/height — `svgSize.ts`)에 곱해 `<svg>`의 width/height/style을 직접 덮어쓴다 — Mermaid가
+  넣는 `width:100%`/`max-width`를 눌러야 해서다. 배율을 바꿔도 보고 있던 중심이 유지되고, 마우스로 끌어 이동한다. 키보드(`+`/`-`/`0`/`Esc`)는 capture 단계에서
+  처리하고 `preventDefault`+`stopPropagation`해서 에디터/앱 단축키로 안 흘러가게 한다. 그림에는 키보드 접근(tabindex)을 두지 않았다 — NodeView 안의 포커스 가능 요소가
+  Enter를 ProseMirror에 넘겨 블록을 쪼갤 수 있어서. 코드 편집은 기존 "코드 보기" 토글로 한다.
+- **표 오른쪽 버튼 메뉴**(`editor/TableContextMenu.tsx`): `DocumentPane`의 종이 `onContextMenu`가 `findCellElement`로 셀(`td`/`th`)을 찾아 `preventDefault`하고 메뉴를 연다
+  (표 밖에서는 건드리지 않아 브라우저 메뉴가 그대로 뜬다). 컨텍스트 메뉴 키(Shift+F10)는 이벤트 대상이 에디터 루트 자체일 때만 커서 위치에서 셀을 찾는다 —
+  표 밖 문단을 클릭했는데 커서가 표 안에 있다는 이유로 표 메뉴가 뜨면 안 되기 때문. `selectCellForMenu`는 클릭한 셀이 이미 `CellSelection` 안이면 선택을 유지하고(셀 병합 대상),
+  아니면 그 셀로 커서를 옮긴다. 항목은 Tiptap Table 커맨드(`addRowBefore/After`, `deleteRow`, `addColumnBefore/After`, `deleteColumn`, `mergeCells`, `splitCell`,
+  `deleteTable`)이고 `editor.can()`으로 꺼짐 표시한다(병합/분할은 이유를 툴팁으로). 단축키가 없는 편집 메뉴라 레지스트리 커맨드가 아니라 컴포넌트 안의 목록이다.
+- **병합된 셀이 있는 표의 저장**(`markdown/tableHtml.ts`): GFM은 colspan/rowspan을 표현할 수 없어서, **병합이 있는 표만** 마크다운 안에 HTML `<table>` 블록으로
+  직렬화한다(없는 표는 기존 GFM 그대로). 줄 사이에 빈 줄이 없어야 한 덩어리의 HTML 블록이므로 행마다 한 줄로 쓰고, 셀 내용은 스키마의 `DOMSerializer`를 쓰되
+  이미지는 `renderHTML`의 화면용 주소(asset URL)가 아니라 문서의 원래 `src`로 적는다. 읽을 때는 markdown-it `html` 옵션을 켜지 **않고**(켜면 모든 HTML 토큰이 바뀐다)
+  `html_table` 블록 규칙(`<table`로 시작 ~ `</table>`이 있는 줄)만 추가해 한 토큰으로 잡고, `parser.ts`가 `MarkdownParser.tokenHandlers.html_table`을 직접 달아
+  `DOMParser.fromSchema`로 만든 table 노드를 그대로 끼워 넣는다(`tokenHandlers`/`push`는 공개 타입에 없지만 실제 멤버). `</table>`이 없으면 이전처럼 문단 텍스트로 남는다.
+  스키마가 아는 요소만 들어오므로 `<script>` 등은 버려진다. round-trip 테스트는 `markdown/__tests__/roundtrip.test.ts`.
+- **개요 영역 크기 조절**: 폭은 `viewState.sidebarWidth`(기본 256, `SIDEBAR_MIN_WIDTH` 160 ~ `SIDEBAR_MAX_WIDTH` 640, 창 폭 − 200px 이하로도 제한 — `clampSidebarWidth`)가 소유하고
+  `markwiz:sidebar-width`(localStorage)에 저장해 다시 켜거나 앱을 다시 열어도 유지한다. `Sidebar.tsx`의 `SidebarResizer`(오른쪽 경계의 `role="separator"` 손잡이)가
+  포인터 캡처로 끌기(포인터 x − 개요 영역 왼쪽 = 새 폭), ←/→(Shift는 64px)·Home/End 키, 더블클릭 초기화를 처리한다. 손잡이는 `aside` 안에 있어 인쇄 때 같이 숨는다.
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6), 다중 문서 탭 완료. 테스트는 Vitest(259개) + Rust `cargo test`(5개), `pnpm test`
-- 현재 버전 **0.1.3**(2026-10-29). 이전: 0.1.2(2026-09-23), 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6), 다중 문서 탭 완료. 테스트는 Vitest(309개) + Rust `cargo test`(5개), `pnpm test`
+- 현재 버전 **0.1.4**(2026-11-12). 이전: 0.1.3(2026-10-29), 0.1.2(2026-09-23), 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
   함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)
 
@@ -294,6 +323,16 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   - 이진 파일 저장을 위해 `PlatformAPI.saveBinaryFileAs`를 추가했다(데스크탑: `writeFile`, `fs:allow-write-file` 권한 필요;
     웹: Blob 다운로드). 테스트는 `docx`가 실제로 만든 `.docx`(zip)를 `jszip`(devDependency, 프로덕션 번들에는 안 들어감)으로
     열어 `word/document.xml`/`footnotes.xml`/`numbering.xml` 내용을 검사한다(마크다운 round-trip 테스트와 같은 취지)
+- **인쇄(`file.print`, Ctrl+P / Cmd+P)와 HTML 내보내기**(`export.html`): `file.print`는 단축키가 있어 레지스트리 커맨드(`fileCommands.ts`)이고 툴바 파일 그룹/파일 메뉴에
+  `fromCommand`로 들어간다. `export.html`은 PDF/Word처럼 `exportActions`의 `run` 클로저다. 인쇄와 PDF 내보내기는 같은 `printWhenReady`(`exportPdf.ts`)를 쓴다 —
+  소스 모드면 `ensurePreviewMode`로 미리보기로 돌아간 뒤(실패하면 `notice.*SourceError` 안내) **`waitForRender`(`waitForRender.ts`)로 NodeView/다이어그램 SVG가 그려질 때까지
+  기다렸다가** 인쇄한다(소스 모드에서 막 돌아온 시점에는 코드 블록/다이어그램 NodeView가 아직 DOM에 없다 — 기다리지 않으면 빈 블록이 나온다). 이미 미리보기 상태면 지연 없이 동기로 `window.print()`.
+  HTML(`exportHtml.ts` + `htmlConvert.ts`)은 문서 트리를 다시 직렬화하지 않고 **화면에 렌더링된 `editor.view.dom`을 복제해 정리**한다(`cleanEditorDom`): 원본 마커/위젯/다이어그램 토글/
+  `contenteditable` 등 편집 흔적 제거, 그려진 다이어그램은 SVG만 남기고 못 그린 것(오류/빈 내용)은 원본 코드 표시, 체크박스는 원본 상태를 `checked` 속성으로 옮겨 읽기 전용,
+  이미지는 http(s)/data:는 그대로 두고 로컬(`file://`/asset/상대 경로)은 화면 픽셀을 `rasterizeImage`로 PNG data URL로 끼워 넣는다(읽을 수 없으면 alt 텍스트).
+  CSS는 `editor.css?raw`를 통째로 넣고(Tailwind `@apply` 없는 순수 CSS라야 한다), 쪽 모양(A4 794px, 안쪽 여백 72px, `@page` 0.75in)은 `PAGE_CSS`가 덧붙인다.
+  복제본의 `<img>`와 원본의 `<img>`는 같은 순서라서 인덱스로 짝짓는다. 파일은 `PlatformAPI.saveBinaryFileAs`(웹: 다운로드, 데스크탑: 저장 대화상자)로 저장한다.
+  PDF는 여전히 시스템 인쇄 대화상자의 "PDF로 저장"을 거치며 파일을 직접 만들지 않는다(README 한계 항목).
 
 ## 빌드 / 배포
 - 개발 `pnpm dev`, 웹 빌드 `pnpm build`, 데스크탑 `pnpm tauri build` (Tauri v2, Rust + MSVC Build Tools 필요 — 설치됨)

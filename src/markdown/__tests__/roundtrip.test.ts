@@ -136,6 +136,41 @@ Below
     );
   });
 
+  describe('table with merged cells (saved as an HTML table, since GFM cannot express them)', () => {
+    const html = `
+<table>
+<tr><th colspan="2"><p>Merged header</p></th></tr>
+<tr><td rowspan="2"><p>tall</p></td><td><p>a <strong>b</strong></p></td></tr>
+<tr><td><p>c</p></td></tr>
+</table>
+`.trim();
+
+    it('is read back with its colspan/rowspan', () => {
+      const table = parseMarkdown(schema, html).firstChild!;
+      expect(table.type.name).toBe('table');
+      expect(table.child(0).child(0).attrs.colspan).toBe(2);
+      expect(table.child(1).child(0).attrs.rowspan).toBe(2);
+    });
+
+    it('keeps the HTML table through a round-trip', () => {
+      expectRoundtrip(html);
+    });
+
+    it('keeps surrounding blocks and does not turn into a GFM table', () => {
+      expectRoundtrip(`Before\n\n${html}\n\nAfter`);
+    });
+
+    it('leaves a table without merged cells as GFM', () => {
+      expectRoundtrip('| a | b |\n| --- | --- |\n| 1 | 2 |');
+    });
+
+    it('keeps unclosed <table> text as plain text instead of dropping it', () => {
+      const doc = parseMarkdown(schema, '<table>\nnot closed');
+      expect(doc.textContent).toContain('<table>');
+      expect(doc.textContent).toContain('not closed');
+    });
+  });
+
   it('footnote reference and definition', () => {
     expectRoundtrip(
       `

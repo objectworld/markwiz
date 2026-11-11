@@ -55,9 +55,44 @@ describe('view commands', () => {
   });
 });
 
+describe('zoom commands', () => {
+  it('zoomIn/zoomOut move in 10% steps and actualSize resets to 100%', () => {
+    expect(getViewState().zoom).toBe(1);
+    executeCommand('view.zoomIn', editor);
+    executeCommand('view.zoomIn', editor);
+    expect(getViewState().zoom).toBe(1.2);
+    executeCommand('view.zoomOut', editor);
+    expect(getViewState().zoom).toBe(1.1);
+    executeCommand('view.actualSize', editor);
+    expect(getViewState().zoom).toBe(1);
+  });
+
+  it('snaps to the next 10% mark when the zoom is between marks (wheel/pinch)', () => {
+    setViewState({ zoom: 1.04 });
+    executeCommand('view.zoomIn', editor);
+    expect(getViewState().zoom).toBe(1.1);
+    setViewState({ zoom: 1.04 });
+    executeCommand('view.zoomOut', editor);
+    expect(getViewState().zoom).toBe(1);
+  });
+
+  it('stays within 50%..300%', () => {
+    for (let i = 0; i < 40; i += 1) executeCommand('view.zoomOut', editor);
+    expect(getViewState().zoom).toBe(0.5);
+    for (let i = 0; i < 60; i += 1) executeCommand('view.zoomIn', editor);
+    expect(getViewState().zoom).toBe(3);
+  });
+});
+
 describe('matchesShortcut', () => {
   const event = (init: Partial<KeyboardEvent>) =>
     ({ key: '', code: '', ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...init }) as KeyboardEvent;
+
+  it('matches Shift+= / Shift+- by physical key even though event.key becomes + / _', () => {
+    expect(matchesShortcut(event({ key: '+', code: 'Equal', ctrlKey: true, shiftKey: true }), 'Ctrl+Shift+=')).toBe(true);
+    expect(matchesShortcut(event({ key: '_', code: 'Minus', ctrlKey: true, shiftKey: true }), 'Ctrl+Shift+-')).toBe(true);
+    expect(matchesShortcut(event({ key: '-', code: 'Minus', ctrlKey: true }), 'Ctrl+Shift+-')).toBe(false);
+  });
 
   it('matches modifier combos and requires exact modifiers', () => {
     expect(matchesShortcut(event({ key: '/', ctrlKey: true }), 'Ctrl+/')).toBe(true);

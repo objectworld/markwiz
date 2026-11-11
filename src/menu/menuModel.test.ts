@@ -85,6 +85,6 @@ describe('파일 > 최근에 연 파일', () => {
 
   it('keeps the file menu top-level items identical to the ribbon file group', () => {
     const names = buildMenuModel(loadKeymap(), recentFiles)[0].entries.flatMap((entry) => (entry.kind === 'item' ? [entry.text] : []));
-    expect(names).toEqual(['새로 만들기', '열기', '저장', '다른 이름으로 저장']);
+    expect(names).toEqual(['새로 만들기', '열기', '저장', '다른 이름으로 저장', '인쇄']);
   });
 });

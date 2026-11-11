@@ -2,7 +2,7 @@ import type { Editor } from '@tiptap/core';
 import { parseMarkdown } from '../markdown/parser';
 import { serializeToMarkdown } from '../markdown/serializer';
 import { registerCommand } from './registry';
-import { getViewState, setViewState } from './viewState';
+import { clampZoom, getViewState, setViewState } from './viewState';
 
 // 현재 문서의 마크다운 원문. 소스 모드 중에는 아직 에디터에 반영되지 않은 textarea 내용이 최신이다.
 export function getMarkdown(editor: Editor): string {
@@ -40,3 +40,14 @@ registerCommand('view.sourceMode', (editor) => {
 
 registerCommand('view.focusMode', () => setViewState({ focusMode: !getViewState().focusMode }));
 registerCommand('view.typewriterMode', () => setViewState({ typewriterMode: !getViewState().typewriterMode }));
+
+// 키보드/메뉴 확대·축소는 10% 단위로 딱 떨어지게 맞춘다(마우스 휠/핀치로 10% 사이에 있어도 다음 10% 눈금으로 간다).
+export function stepZoom(direction: 1 | -1): void {
+  const tenths = getViewState().zoom * 10;
+  const next = direction > 0 ? Math.floor(tenths + 1e-6) + 1 : Math.ceil(tenths - 1e-6) - 1;
+  setViewState({ zoom: clampZoom(next / 10) });
+}
+
+registerCommand('view.zoomIn', () => stepZoom(1));
+registerCommand('view.zoomOut', () => stepZoom(-1));
+registerCommand('view.actualSize', () => setViewState({ zoom: 1 }));

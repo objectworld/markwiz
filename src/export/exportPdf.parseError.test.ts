@@ -12,7 +12,7 @@ vi.mock('../markdown/parser', () => ({
 import '../commands/viewCommands';
 import { getViewState, resetViewState, setViewState } from '../commands/viewState';
 import { editorExtensions } from '../editor/extensions';
-import { exportPdf } from './exportPdf';
+import { exportPdf, printDocument } from './exportPdf';
 
 afterEach(() => {
   resetViewState();
@@ -30,6 +30,20 @@ describe('exportPdf with a broken source-mode parse', () => {
 
     expect(getViewState().sourceMode).toBe(true);
     expect(getViewState().notice).toContain('내보낼 수 없습니다');
+    expect(print).not.toHaveBeenCalled();
+    errors.mockRestore();
+    editor.destroy();
+  });
+
+  it('printDocument shows its own notice and does not print either', () => {
+    const editor = new Editor({ extensions: editorExtensions, content: '<p>hello</p>' });
+    setViewState({ sourceMode: true, sourceText: '# Changed' });
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    printDocument(editor);
+
+    expect(getViewState().notice).toContain('인쇄할 수 없습니다');
     expect(print).not.toHaveBeenCalled();
     errors.mockRestore();
     editor.destroy();

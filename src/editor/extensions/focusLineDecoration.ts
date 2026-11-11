@@ -17,6 +17,11 @@ const MARK_DELIMITERS: Record<string, [string, string]> = {
   code: ['`', '`'],
 };
 
+// 블록 앞머리 마커(`# `, `- `, `1. `, `> `, `- [ ] `)는 글자를 옆으로 밀지 않도록 왼쪽 여백에 띄워서(editor.css의
+// .markwiz-raw-block) 본문 시작 위치가 포커스 여부와 상관없이 그대로이게 한다. 인라인 마커(`**` 등)는 글자 사이에
+// 들어가는 문자라 흐름 안에 둔다.
+const BLOCK_MARKER = 'markwiz-raw-block';
+
 function rawMarker(text: string, extraClass = ''): () => HTMLElement {
   return () => {
     const span = document.createElement('span');
@@ -58,7 +63,7 @@ function buildDecorations(doc: ProseMirrorNode, selection: Selection): Decoratio
       const prefix = `${'#'.repeat(node.attrs.level as number)} `;
       // 위젯 key에 내용을 포함시켜야 레벨이 바뀔 때 ProseMirror가 캐시된
       // DOM을 재사용하지 않고 다시 그린다 (위치가 같으면 기본적으로 재사용됨).
-      decorations.push(Decoration.widget(pos + 1, rawMarker(prefix), { side: -1, key: `heading-${pos}-${prefix}` }));
+      decorations.push(Decoration.widget(pos + 1, rawMarker(prefix, BLOCK_MARKER), { side: -1, key: `heading-${pos}-${prefix}` }));
       return;
     }
 
@@ -80,20 +85,20 @@ function buildDecorations(doc: ProseMirrorNode, selection: Selection): Decoratio
     }
 
     if (node.type.name === 'paragraph' && parentName === 'blockquote') {
-      decorations.push(Decoration.widget(pos + 1, rawMarker('> '), { side: -1, key: `bq-${pos}` }));
+      decorations.push(Decoration.widget(pos + 1, rawMarker('> ', `${BLOCK_MARKER} markwiz-raw-quote`), { side: -1, key: `bq-${pos}` }));
       return;
     }
 
     if (node.type.name === 'taskItem') {
       const checked = Boolean(node.attrs.checked);
       const marker = `- [${checked ? 'x' : ' '}] `;
-      decorations.push(Decoration.widget(pos + 1, rawMarker(marker), { side: -1, key: `task-${pos}-${checked}` }));
+      decorations.push(Decoration.widget(pos + 1, rawMarker(marker, BLOCK_MARKER), { side: -1, key: `task-${pos}-${checked}` }));
       return;
     }
 
     if (node.type.name === 'listItem' && parentName) {
       const marker = parentName === 'orderedList' ? orderedListMarker(parent!, index) : '- ';
-      decorations.push(Decoration.widget(pos + 1, rawMarker(marker), { side: -1, key: `li-${pos}-${marker}` }));
+      decorations.push(Decoration.widget(pos + 1, rawMarker(marker, BLOCK_MARKER), { side: -1, key: `li-${pos}-${marker}` }));
     }
   });
 

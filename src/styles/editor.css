@@ -22,6 +22,27 @@
   display: block;
 }
 
+/* 블록 앞머리 마커는 본문 시작 위치(right: 100%)의 왼쪽 여백에 오른쪽 정렬로 띄운다 — 흐름 안에 넣으면 포커스될 때마다
+   글자가 옆으로 밀린다. 기준이 되는 요소(제목/항목/인용 문단)는 아래에서 position: relative로 만든다. */
+/* tiptap이 넣는 `.ProseMirror [contenteditable="false"] { white-space: normal }`보다 우선하도록 .ProseMirror를 앞에 붙인다. */
+.ProseMirror .markwiz-raw-marker.markwiz-raw-block {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  white-space: pre;
+  text-align: right;
+  line-height: inherit;
+}
+
+/* 인용은 왼쪽에 3px 선 + 1em 안쪽 여백이 있으므로 그 바깥으로 비켜서 띄운다. */
+.ProseMirror .markwiz-raw-marker.markwiz-raw-quote {
+  right: calc(100% + 1em + 3px);
+}
+
+.ProseMirror :is(h1, h2, h3, h4, h5, h6, li, blockquote > p) {
+  position: relative;
+}
+
 .markwiz-footnote-ref {
   color: #c15f3c;
   cursor: default;
@@ -70,6 +91,10 @@
 
 .markwiz-diagram-svg svg {
   max-width: 100%;
+}
+
+.markwiz-diagram-enlargeable {
+  cursor: zoom-in;
 }
 
 .markwiz-diagram-error {
@@ -143,14 +168,9 @@
   flex: 1;
 }
 
-/* 포커스된 항목은 원본 마커(예: "- ")를 위젯으로 직접 보여주므로 기본 글머리 기호를 숨기고,
-   마커가 문단 위 별도 줄에 뜨지 않도록 첫 문단을 인라인으로 만든다. */
+/* 포커스된 항목은 원본 마커(예: "- ")를 위젯으로 직접 보여주므로 기본 글머리 기호는 숨긴다(마커는 같은 자리에 뜬다). */
 .ProseMirror li:has(> .markwiz-raw-marker) {
   list-style: none;
-}
-
-.ProseMirror :is(li, div):has(> .markwiz-raw-marker) > p:first-of-type {
-  display: inline;
 }
 
 .ProseMirror blockquote {
@@ -231,6 +251,11 @@
 
 /* PDF 내보내기(window.print()): 화면 크롬(메뉴/툴바/사이드바/상태바)을 숨기고 문서만 인쇄한다.
    다이어그램은 현재 토글 상태와 무관하게 항상 미리보기(그림)로, raw 마크업 표시는 항상 숨긴다. */
+/* 화면의 종이는 A4(794px = 210mm)이고 안쪽 여백이 72px(0.75in)이므로, 인쇄 여백도 0.75in로 맞춰 줄바꿈이 화면과 같게 한다. */
+@page {
+  margin: 0.75in;
+}
+
 @media print {
   header[aria-label='리본'],
   [role='menubar'],
@@ -266,6 +291,7 @@
   }
 
   .markwiz-paper {
+    zoom: 1 !important;
     width: auto !important;
     max-width: none !important;
     min-height: 0 !important;

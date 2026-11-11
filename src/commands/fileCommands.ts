@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/core';
 import { parseMarkdown } from '../markdown/parser';
 import { getPlatform } from '../platform';
 import { basename, type OpenedDocument, type PlatformAPI } from '../platform/types';
+import { printDocument } from '../export/exportPdf';
 import { t } from '../i18n/i18n';
 import { getDocumentState, setDocumentState } from './documentState';
 import { addRecentFile, removeRecentFile } from './recentFiles';
@@ -123,6 +124,7 @@ export async function saveActiveDocument(editor: Editor): Promise<boolean> {
 
 registerCommand('file.save', (editor) => saveActiveDocument(editor));
 
+registerCommand('file.print', (editor) => printDocument(editor));
 registerCommand('file.saveAs', async (editor) => {
   const platform = await getPlatform();
   const markdown = getMarkdown(editor);
