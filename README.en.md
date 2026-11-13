@@ -39,21 +39,36 @@ Supported syntax: headings (H1–H6), bold/italic/strikethrough/inline code, blo
 ordered/unordered lists, checkboxes, code blocks (syntax highlighting), tables (GFM), links,
 images, horizontal rules, footnotes.
 
-## Installation
+## Installation (Windows)
 
-### Install from a release build (Windows)
+You can install from a release build without building anything. No developer tools (Node.js, Rust, …) are needed.
 
-Grab the latest installer from the [Releases page](https://github.com/objectworld/markwiz/releases).
+1. Download one of these files from the [Releases page](https://github.com/objectworld/markwiz/releases/latest).
 
-| File | Description |
-|---|---|
-| `Markwiz_0.1.4_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `Markwiz_0.1.4_x64_en-US.msi` | MSI package (English) |
-| `Markwiz_0.1.4_x64_ko-KR.msi` | MSI package (Korean) |
-| `markwiz.exe` | Standalone executable, no installation (requires WebView2 runtime) |
+   | File | Description |
+   |---|---|
+   | `Markwiz_0.1.4_x64-setup.exe` | Installer (recommended). Lets you pick Korean/English and installs WebView2 automatically if missing |
+   | `Markwiz_0.1.4_x64_en-US.msi` | MSI package (English) |
+   | `Markwiz_0.1.4_x64_ko-KR.msi` | MSI package (Korean) |
+   | `Markwiz_0.1.4_x64_portable.exe` | Standalone executable, no installation (requires the WebView2 runtime; no `.md` file association) |
 
-The app isn't code-signed, so Windows SmartScreen may warn on first launch ("More info → Run
-anyway"). To build from source, follow the steps below.
+2. Run the downloaded file. The app isn't code-signed, so Windows SmartScreen may warn ("Windows protected your PC") —
+   choose **More info → Run anyway**.
+3. Follow the installer. `setup.exe` first asks for the installer language (한국어/English), which also becomes the app's
+   default language (you can change it later under **Help > 언어 / Language**). Leave the **Open Markdown files with Markwiz**
+   checkbox (checked by default) on to open `.md` files by double-clicking them in File Explorer.
+4. Start **Markwiz** from the Start menu.
+
+- **Requirements**: 64-bit (x64) Windows 10/11. The WebView2 runtime ships with Windows 11; the installer adds it if missing.
+- **Updating**: download the newer installer and install over the existing version (close Markwiz first).
+- **Uninstalling**: remove Markwiz from Windows **Settings > Apps > Installed apps**.
+- **Verifying the download (optional)**: compare `Get-FileHash .\Markwiz_0.1.4_x64-setup.exe` with the release's `SHA256SUMS.txt`.
+
+Installers for macOS/Linux aren't provided yet.
+
+## Development setup
+
+Only needed to run or build from source. To just use the app, [Installation (Windows)](#installation-windows) above is enough.
 
 ### 1. Required software
 
