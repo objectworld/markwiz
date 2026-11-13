@@ -252,15 +252,24 @@
 /* PDF 내보내기(window.print()): 화면 크롬(메뉴/툴바/사이드바/상태바)을 숨기고 문서만 인쇄한다.
    다이어그램은 현재 토글 상태와 무관하게 항상 미리보기(그림)로, raw 마크업 표시는 항상 숨긴다. */
 /* 화면의 종이는 A4(794px = 210mm)이고 안쪽 여백이 72px(0.75in)이므로, 인쇄 여백도 0.75in로 맞춰 줄바꿈이 화면과 같게 한다. */
+/* 브라우저/웹뷰가 인쇄물에 넣는 머리글·바닥글(날짜, 제목, 주소, 쪽 번호)을 없앤다: Chromium(131+)은 @page에
+   여백 상자(@top-left 등)가 하나라도 정의돼 있으면 기본 머리글/바닥글을 그리지 않는다. 내용은 빈 문자열이다. */
 @page {
   margin: 0.75in;
+  @top-left { content: ''; }
+  @top-center { content: ''; }
+  @top-right { content: ''; }
+  @bottom-left { content: ''; }
+  @bottom-center { content: ''; }
+  @bottom-right { content: ''; }
 }
 
 @media print {
-  header[aria-label='리본'],
-  [role='menubar'],
-  aside[aria-label='사이드바'],
-  footer[aria-label='상태 표시줄'],
+  /* 문서(main) 말고는 전부 숨긴다. aria-label로 고르면 UI 언어(영어)에 따라 안 맞으므로 구조로 고른다:
+     앱 루트에서는 작업 영역만, 작업 영역에서는 main(문서)만 남기고, body에 포털로 그린 창(다이어그램 팝업 등)도 뺀다. */
+  body > :not(#root),
+  .markwiz-app > :not(.markwiz-workarea),
+  .markwiz-workarea > :not(main),
   .markwiz-diagram-toggle,
   .markwiz-raw-marker,
   .markwiz-typewriter-spacer {
@@ -282,6 +291,13 @@
   html,
   body {
     background: #fff !important;
+  }
+
+  .markwiz-app,
+  .markwiz-workarea {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
 
   main {

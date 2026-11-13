@@ -115,12 +115,12 @@ export function Editor() {
   }, [activeTab.name, activeTab.dirty]);
 
   return (
-    <div className="flex h-screen flex-col bg-canvas">
+    <div className="markwiz-app flex h-screen flex-col bg-canvas">
       {USE_IN_APP_MENU && <MenuBar editor={activeEditor} showRecent={isTauri()} />}
       {/* editor가 null에서 생성되는 순간 useEditorState가 초기 스냅샷을 다시 계산하지 않으므로 key로 다시 마운트한다. */}
       <Ribbon key={activeEditor ? 'ribbon-ready' : 'ribbon-loading'} editor={activeEditor} />
       <TabBar editors={editorsById} />
-      <div className="flex min-h-0 flex-1">
+      <div className="markwiz-workarea flex min-h-0 flex-1">
         {view.sidebar && activeEditor && <Sidebar editor={activeEditor} />}
         {/* 열려 있는 탭마다 하나씩, 활성 탭만 보이게 둔다(실행 취소 기록/스크롤 유지를 위해 비활성 탭도 계속 마운트). */}
         {tabs.map((tab) => (

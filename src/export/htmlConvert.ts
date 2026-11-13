@@ -75,7 +75,7 @@ html { background: #faf9f5; }
 body { margin: 0; padding: 24px 16px; }
 .markwiz-page { box-sizing: border-box; max-width: 794px; margin: 0 auto; padding: 72px; background: #fff; border: 1px solid #ddd9cc; box-shadow: 0 1px 3px rgba(61, 57, 41, 0.12); }
 @media (max-width: 860px) { .markwiz-page { padding: 24px; } }
-@page { margin: 0.75in; }
+@page { margin: 0.75in; @top-left { content: ''; } @top-center { content: ''; } @top-right { content: ''; } @bottom-left { content: ''; } @bottom-center { content: ''; } @bottom-right { content: ''; } }
 @media print {
   html { background: #fff; }
   body { padding: 0; }

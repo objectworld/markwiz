@@ -88,7 +88,7 @@ describe('buildHtmlDocument', () => {
     expect(html).toContain('<html lang="ko">');
     expect(html).toContain('<title>A &amp; &lt;B&gt;</title>');
     expect(html).toContain('.x{color:red}');
-    expect(html).toContain('@page { margin: 0.75in; }');
+    expect(html).toContain('@page { margin: 0.75in; @top-left');
     expect(html).toContain('<div class="ProseMirror">\n<p>hi</p>\n</div>');
   });
 
