@@ -266,8 +266,8 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6), 다중 문서 탭 완료. 테스트는 Vitest(322개) + Rust `cargo test`(5개), `pnpm test`
-- 현재 버전 **0.1.5**(2026-11-15). 이전: 0.1.4(2026-11-12), 0.1.3(2026-10-29), 0.1.2(2026-09-23), 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6), 다중 문서 탭 완료. 테스트는 Vitest(324개) + Rust `cargo test`(5개), `pnpm test`
+- 현재 버전 **0.1.6**(2026-11-16). 이전: 0.1.5(2026-11-15), 0.1.4(2026-11-12), 0.1.3(2026-10-29), 0.1.2(2026-09-23), 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
   함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)
 
@@ -328,7 +328,7 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - **인쇄(`file.print`, Ctrl+P / Cmd+P)와 HTML 내보내기**(`export.html`): `file.print`는 단축키가 있어 레지스트리 커맨드(`fileCommands.ts`)이고 툴바 파일 그룹/파일 메뉴에
   `fromCommand`로 들어간다. `export.html`은 PDF/Word처럼 `exportActions`의 `run` 클로저다. 인쇄와 PDF 내보내기는 같은 `printWhenReady`(`exportPdf.ts`)를 쓴다 —
   소스 모드면 `ensurePreviewMode`로 미리보기로 돌아간 뒤(실패하면 `notice.*SourceError` 안내) **`waitForRender`(`waitForRender.ts`)로 NodeView/다이어그램 SVG가 그려질 때까지
-  기다렸다가** 인쇄한다(소스 모드에서 막 돌아온 시점에는 코드 블록/다이어그램 NodeView가 아직 DOM에 없다 — 기다리지 않으면 빈 블록이 나온다). 이미 미리보기 상태면 지연 없이 동기로 `window.print()`.
+  기다렸다가** 인쇄한다(소스 모드에서 막 돌아온 시점에는 코드 블록/다이어그램 NodeView가 아직 DOM에 없다 — 기다리지 않으면 빈 블록이 나온다). 이미 미리보기 상태면 지연 없이 동기로 `window.print()`. 실제 호출은 `printWithFileName`이 감싼다 — PDF 기본 파일명은 `document.title`에서 나오므로(평소 제목은 `이름.md - Markwiz`) 인쇄하는 동안만 제목을 확장자 뗀 문서 이름(`pdfTitleFor`)으로 바꾸고 `afterprint`에서 되돌린다(네이티브 인쇄 대화상자에서는 검증 못 함).
   HTML(`exportHtml.ts` + `htmlConvert.ts`)은 문서 트리를 다시 직렬화하지 않고 **화면에 렌더링된 `editor.view.dom`을 복제해 정리**한다(`cleanEditorDom`): 원본 마커/위젯/다이어그램 토글/
   `contenteditable` 등 편집 흔적 제거, 그려진 다이어그램은 SVG만 남기고 못 그린 것(오류/빈 내용)은 원본 코드 표시, 체크박스는 원본 상태를 `checked` 속성으로 옮겨 읽기 전용,
   이미지는 http(s)/data:는 그대로 두고 로컬(`file://`/asset/상대 경로)은 화면 픽셀을 `rasterizeImage`로 PNG data URL로 끼워 넣는다(읽을 수 없으면 alt 텍스트).

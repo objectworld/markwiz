@@ -10,7 +10,7 @@ A Typora-style WYSIWYG Markdown editor built on Tiptap (ProseMirror). It renders
 PlantUML diagrams entirely client-side, with no backend server required. Web and desktop (Tauri)
 share the same codebase.
 
-**Current version: 0.1.5** (2026-11-15). See the [release notes](#release-notes) for what changed.
+**Current version: 0.1.6** (2026-11-16). See the [release notes](#release-notes) for what changed.
 
 ![Markwiz screenshot](docs/images/screenshot.png)
 
@@ -47,10 +47,10 @@ You can install from a release build without building anything. No developer too
 
    | File | Description |
    |---|---|
-   | `Markwiz_0.1.5_x64-setup.exe` | Installer (recommended). Lets you pick Korean/English and installs WebView2 automatically if missing |
-   | `Markwiz_0.1.5_x64_en-US.msi` | MSI package (English) |
-   | `Markwiz_0.1.5_x64_ko-KR.msi` | MSI package (Korean) |
-   | `Markwiz_0.1.5_x64_portable.exe` | Standalone executable, no installation (requires the WebView2 runtime; no `.md` file association) |
+   | `Markwiz_0.1.6_x64-setup.exe` | Installer (recommended). Lets you pick Korean/English and installs WebView2 automatically if missing |
+   | `Markwiz_0.1.6_x64_en-US.msi` | MSI package (English) |
+   | `Markwiz_0.1.6_x64_ko-KR.msi` | MSI package (Korean) |
+   | `Markwiz_0.1.6_x64_portable.exe` | Standalone executable, no installation (requires the WebView2 runtime; no `.md` file association) |
 
 2. Run the downloaded file. The app isn't code-signed, so Windows SmartScreen may warn ("Windows protected your PC") —
    choose **More info → Run anyway**.
@@ -62,7 +62,7 @@ You can install from a release build without building anything. No developer too
 - **Requirements**: 64-bit (x64) Windows 10/11. The WebView2 runtime ships with Windows 11; the installer adds it if missing.
 - **Updating**: download the newer installer and install over the existing version (close Markwiz first).
 - **Uninstalling**: remove Markwiz from Windows **Settings > Apps > Installed apps**.
-- **Verifying the download (optional)**: compare `Get-FileHash .\Markwiz_0.1.5_x64-setup.exe` with the release's `SHA256SUMS.txt`.
+- **Verifying the download (optional)**: compare `Get-FileHash .\Markwiz_0.1.6_x64-setup.exe` with the release's `SHA256SUMS.txt`.
 
 Installers for macOS/Linux aren't provided yet.
 
@@ -143,9 +143,9 @@ Artifacts are written to `src-tauri/target/release/`.
 
 | File | Description |
 |---|---|
-| `bundle/nsis/Markwiz_0.1.5_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `bundle/msi/Markwiz_0.1.5_x64_en-US.msi` | MSI package (English) |
-| `bundle/msi/Markwiz_0.1.5_x64_ko-KR.msi` | MSI package (Korean) |
+| `bundle/nsis/Markwiz_0.1.6_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
+| `bundle/msi/Markwiz_0.1.6_x64_en-US.msi` | MSI package (English) |
+| `bundle/msi/Markwiz_0.1.6_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation |
 
 - Running the exe alone (without an installer) requires the **WebView2 runtime** on the target PC.
@@ -431,6 +431,10 @@ full list is in [`src/commands/keymap.json`](src/commands/keymap.json).
 - Only a light theme is supported.
 
 ## Release notes
+
+### 0.1.6 (2026-11-16)
+
+- **PDF file name**: when you choose "Save as PDF" in the print dialog, the suggested file name now follows the Markdown file (`name.pdf`) instead of `name.md - Markwiz.pdf`
 
 ### 0.1.5 (2026-11-15)
 

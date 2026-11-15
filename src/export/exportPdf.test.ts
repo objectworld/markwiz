@@ -4,7 +4,7 @@ import { waitFor } from '@testing-library/react';
 import '../commands/viewCommands';
 import { getViewState, resetViewState, setViewState } from '../commands/viewState';
 import { editorExtensions } from '../editor/extensions';
-import { exportPdf, printDocument } from './exportPdf';
+import { exportPdf, pdfTitleFor, printDocument } from './exportPdf';
 
 afterEach(() => {
   resetViewState();
@@ -59,5 +59,32 @@ describe('printDocument', () => {
     expect(getViewState().sourceMode).toBe(false);
     await waitFor(() => expect(print).toHaveBeenCalledOnce());
     editor.destroy();
+  });
+});
+
+describe('PDF file name', () => {
+  it('uses the markdown file name without its extension as the document title while printing', async () => {
+    const { setDocumentState } = await import('../commands/documentState');
+    setDocumentState({ path: 'C:/docs/am-oss,nms-service-pattern-tmf.md', name: 'am-oss,nms-service-pattern-tmf.md' });
+    document.title = 'am-oss,nms-service-pattern-tmf.md - Markwiz';
+    const editor = new Editor({ extensions: editorExtensions, content: '<p>hello</p>' });
+    let titleDuringPrint = '';
+    vi.spyOn(window, 'print').mockImplementation(() => {
+      titleDuringPrint = document.title;
+    });
+
+    exportPdf(editor);
+
+    expect(titleDuringPrint).toBe('am-oss,nms-service-pattern-tmf');
+    // 인쇄가 끝나면 원래 제목으로 돌아온다.
+    window.dispatchEvent(new Event('afterprint'));
+    expect(document.title).toBe('am-oss,nms-service-pattern-tmf.md - Markwiz');
+    editor.destroy();
+  });
+
+  it('strips .md/.markdown and falls back to untitled', () => {
+    expect(pdfTitleFor('notes.MD')).toBe('notes');
+    expect(pdfTitleFor('a.b.markdown')).toBe('a.b');
+    expect(pdfTitleFor('.md')).toBe('untitled');
   });
 });

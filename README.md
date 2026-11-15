@@ -10,7 +10,7 @@ Typora 스타일의 WYSIWYG 마크다운 에디터. Tiptap(ProseMirror) 기반�
 Mermaid와 PlantUML 다이어그램을 서버 없이 클라이언트 사이드에서 렌더링합니다.
 웹 브라우저와 데스크탑(Tauri) 양쪽에서 동일한 코드베이스로 동작합니다.
 
-**현재 버전: 0.1.5** (2026-11-15). 변경 내용은 [릴리즈 노트](#릴리즈-노트)를 참고하세요.
+**현재 버전: 0.1.6** (2026-11-16). 변경 내용은 [릴리즈 노트](#릴리즈-노트)를 참고하세요.
 
 ![Markwiz 스크린샷](docs/images/screenshot.png)
 
@@ -38,10 +38,10 @@ Mermaid와 PlantUML 다이어그램을 서버 없이 클라이언트 사이드�
 
    | 파일 | 설명 |
    |---|---|
-   | `Markwiz_0.1.5_x64-setup.exe` | 설치 프로그램(권장). 한국어/영어를 고를 수 있고, WebView2가 없으면 자동으로 설치합니다 |
-   | `Markwiz_0.1.5_x64_ko-KR.msi` | MSI 설치 패키지(한국어) |
-   | `Markwiz_0.1.5_x64_en-US.msi` | MSI 설치 패키지(영어) |
-   | `Markwiz_0.1.5_x64_portable.exe` | 설치 없이 실행하는 단독 실행 파일(WebView2 런타임 필요, `.md` 파일 연결 없음) |
+   | `Markwiz_0.1.6_x64-setup.exe` | 설치 프로그램(권장). 한국어/영어를 고를 수 있고, WebView2가 없으면 자동으로 설치합니다 |
+   | `Markwiz_0.1.6_x64_ko-KR.msi` | MSI 설치 패키지(한국어) |
+   | `Markwiz_0.1.6_x64_en-US.msi` | MSI 설치 패키지(영어) |
+   | `Markwiz_0.1.6_x64_portable.exe` | 설치 없이 실행하는 단독 실행 파일(WebView2 런타임 필요, `.md` 파일 연결 없음) |
 
 2. 받은 파일을 실행합니다. 코드 서명이 되어 있지 않아 Windows SmartScreen 경고("Windows의 PC 보호")가 뜰 수 있습니다 —
    **추가 정보 → 실행**을 누르면 됩니다.
@@ -53,7 +53,7 @@ Mermaid와 PlantUML 다이어그램을 서버 없이 클라이언트 사이드�
 - **요구 사항**: Windows 10/11 64비트(x64). WebView2 런타임은 Windows 11에 기본 포함되어 있고, 없으면 설치 프로그램이 설치합니다.
 - **업데이트**: 새 버전의 설치 파일을 받아 그대로 다시 설치하면 됩니다(실행 중인 Markwiz는 먼저 닫으세요).
 - **제거**: Windows **설정 > 앱 > 설치된 앱**에서 Markwiz를 제거합니다.
-- **받은 파일 확인(선택)**: 릴리즈의 `SHA256SUMS.txt`와 `Get-FileHash .\Markwiz_0.1.5_x64-setup.exe` 결과를 비교합니다.
+- **받은 파일 확인(선택)**: 릴리즈의 `SHA256SUMS.txt`와 `Get-FileHash .\Markwiz_0.1.6_x64-setup.exe` 결과를 비교합니다.
 
 macOS/Linux용 설치 파일은 아직 제공하지 않습니다.
 
@@ -132,9 +132,9 @@ pnpm tauri build
 
 | 파일 | 설명 |
 |---|---|
-| `bundle/nsis/Markwiz_0.1.5_x64-setup.exe` | 설치 프로그램(권장, WebView2가 없으면 자동 설치) |
-| `bundle/msi/Markwiz_0.1.5_x64_ko-KR.msi` | MSI 설치 패키지(한국어) |
-| `bundle/msi/Markwiz_0.1.5_x64_en-US.msi` | MSI 설치 패키지(영어) |
+| `bundle/nsis/Markwiz_0.1.6_x64-setup.exe` | 설치 프로그램(권장, WebView2가 없으면 자동 설치) |
+| `bundle/msi/Markwiz_0.1.6_x64_ko-KR.msi` | MSI 설치 패키지(한국어) |
+| `bundle/msi/Markwiz_0.1.6_x64_en-US.msi` | MSI 설치 패키지(영어) |
 | `markwiz.exe` | 설치 없이 실행하는 단독 실행 파일 |
 
 - 설치 프로그램 없이 exe만 복사해 실행하려면 대상 PC에 **WebView2 런타임**이 있어야 합니다.
@@ -369,6 +369,10 @@ macOS는 `Ctrl`을 `Cmd`로 바꿔 쓰는 것이 기본이지만 일부(★)는 
 - 라이트 테마만 지원합니다.
 
 ## 릴리즈 노트
+
+### 0.1.6 (2026-11-16)
+
+- **PDF 파일 이름**: 인쇄 대화상자에서 "PDF로 저장"할 때 기본 파일 이름이 `이름.md - Markwiz.pdf`가 아니라 마크다운 파일 이름을 그대로 따른 `이름.pdf`로 제안됩니다
 
 ### 0.1.5 (2026-11-15)
 

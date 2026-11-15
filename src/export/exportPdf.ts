@@ -1,4 +1,5 @@
 import type { Editor } from '@tiptap/core';
+import { getDocumentState } from '../commands/documentState';
 import { executeCommand } from '../commands/registry';
 import { getViewState, showNotice } from '../commands/viewState';
 import { t } from '../i18n/i18n';
@@ -19,14 +20,41 @@ export function ensurePreviewMode(editor: Editor, errorKey: MessageKey): boolean
 // 인쇄용 화면 구성은 src/styles/editor.css의 @media print 규칙이 맡는다(리본/메뉴/사이드바/상태바 숨김,
 // 다이어그램은 항상 미리보기로 등). 소스 모드에서 돌아온 직후라면 NodeView가 그려진 뒤에 인쇄한다
 // (이미 미리보기 상태면 지연 없이 바로 인쇄 — window.print는 동기 호출이다).
+// 인쇄 대화상자의 PDF 기본 파일명은 문서 제목(document.title)에서 나온다. 평소 제목은 "이름.md - Markwiz"라
+// 그대로 두면 "이름.md - Markwiz.pdf"가 되므로, 인쇄하는 동안만 제목을 마크다운 파일 이름(확장자 제외)으로 바꿔
+// "이름.pdf"로 저장되게 한다. 인쇄가 끝나면(afterprint) 원래 제목으로 되돌린다.
+export function pdfTitleFor(name: string): string {
+  return name.replace(/\.(md|markdown)$/i, '') || 'untitled';
+}
+
+function printWithFileName(): void {
+  const original = document.title;
+  let restored = false;
+  const restore = () => {
+    if (restored) return;
+    restored = true;
+    window.removeEventListener('afterprint', restore);
+    document.title = original;
+  };
+  document.title = pdfTitleFor(getDocumentState().name);
+  window.addEventListener('afterprint', restore);
+  try {
+    window.print();
+  } finally {
+    // window.print가 대화상자를 기다리지 않고 돌아오는 웹뷰에서도 제목이 영영 바뀐 채로 남지 않게 한다.
+    // afterprint가 먼저 오면 위에서 이미 복원됐다.
+    window.setTimeout(restore, 60_000);
+  }
+}
+
 function printWhenReady(editor: Editor, errorKey: MessageKey): void {
   const wasSourceMode = getViewState().sourceMode;
   if (!ensurePreviewMode(editor, errorKey)) return;
   if (!wasSourceMode) {
-    window.print();
+    printWithFileName();
     return;
   }
-  void waitForRender(editor.view.dom as HTMLElement, { settle: true }).then(() => window.print());
+  void waitForRender(editor.view.dom as HTMLElement, { settle: true }).then(printWithFileName);
 }
 
 export function printDocument(editor: Editor): void {
