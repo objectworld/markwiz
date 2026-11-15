@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadKeymap } from '../commands/keymap';
-import { actionLabel, diagramActions, exportActions, fontActions, historyActions, insertActions, paragraphActions, viewActions } from '../ribbon/ribbonActions';
+import { actionLabel, diagramActions, exportActions, findActions, fontActions, historyActions, insertActions, paragraphActions, viewActions } from '../ribbon/ribbonActions';
 import { buildMenuModel, exportMenuText, recentMenuText } from './menuModel';
 
 const model = buildMenuModel(loadKeymap());
@@ -15,7 +15,7 @@ describe('native menu model', () => {
 
   it('lists the same items as the ribbon for each group', () => {
     const names = (text: string) => items(text).map((entry) => entry.text);
-    expect(names('편집')).toEqual(historyActions.map((action) => actionLabel(action)));
+    expect(names('편집')).toEqual([...historyActions, ...findActions].map((action) => actionLabel(action)));
     expect(names('글꼴')).toEqual(fontActions.map((action) => actionLabel(action)));
     expect(names('단락')).toEqual(paragraphActions.map((action) => actionLabel(action)));
     expect(names('삽입')).toEqual(insertActions.map((action) => actionLabel(action)));

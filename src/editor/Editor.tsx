@@ -7,6 +7,7 @@ import { executeCommand } from '../commands/registry';
 import { matchesShortcut } from '../commands/shortcutFormat';
 import { useTabsState } from '../commands/tabsState';
 import { getViewState, setViewState, useViewState } from '../commands/viewState';
+import { useExternalChangeWatch } from '../commands/externalChange';
 import { useLanguage } from '../i18n/i18n';
 import { AboutDialog } from '../menu/AboutDialog';
 import { HelpDialog } from '../menu/HelpDialog';
@@ -15,6 +16,8 @@ import { Ribbon } from '../ribbon/Ribbon';
 import { StatusBar } from '../ribbon/StatusBar';
 import { CloseTabDialog } from './CloseTabDialog';
 import { DocumentPane } from './DocumentPane';
+import { ExternalChangeDialog } from './ExternalChangeDialog';
+import { FindDialog } from './FindDialog';
 import { InsertDialog } from './InsertDialog';
 import { Sidebar } from './Sidebar';
 import { TabBar } from './TabBar';
@@ -22,7 +25,7 @@ import '../styles/editor.css';
 
 // 앱 레벨 단축키(파일/보기). 에디터에 포커스가 없을 때를 위한 전역 처리 대상이다.
 const APP_COMMAND_IDS = COMMAND_IDS.filter(
-  (id): id is CommandId => id.startsWith('view.') || id.startsWith('file.'),
+  (id): id is CommandId => id.startsWith('view.') || id.startsWith('file.') || id.startsWith('edit.'),
 );
 
 // OS가 그리는 메뉴 바는 색을 바꿀 수 없어, macOS 데스크탑(화면 맨 위 네이티브 메뉴)만 빼고
@@ -46,6 +49,7 @@ export function Editor() {
   }, []);
   const activeEditor = editorsById.get(activeId) ?? null;
   const activeTab = tabs.find((tab) => tab.id === activeId) ?? tabs[0];
+  useExternalChangeWatch();
 
   // 설치 프로그램에서 고른 언어를 기본 언어로 적용한다(사용자가 직접 고른 언어가 없을 때만).
   useEffect(() => {
@@ -61,7 +65,7 @@ export function Editor() {
     if (!activeEditor) return;
     const onKeyDown = (event: KeyboardEvent) => {
       const open = getViewState();
-      if (event.defaultPrevented || open.help || open.about || open.insert || open.closeTabConfirm) return;
+      if (event.defaultPrevented || open.help || open.about || open.insert || open.closeTabConfirm || open.externalChange) return;
       const keymap = loadKeymap();
       const id = APP_COMMAND_IDS.find((candidate) => {
         const entry = keymap[candidate];
@@ -132,6 +136,10 @@ export function Editor() {
       )}
       {view.about && <AboutDialog onClose={() => setViewState({ about: false })} />}
       {view.help && activeEditor && <HelpDialog editor={activeEditor} onClose={() => setViewState({ help: false })} />}
+      {view.find && activeEditor && !view.sourceMode && (
+        <FindDialog editor={activeEditor} replaceMode={view.find.replace} focusToken={view.find.token} onClose={() => setViewState({ find: null })} />
+      )}
+      {view.externalChange && <ExternalChangeDialog tabId={view.externalChange} editors={editorsById} onClose={() => setViewState({ externalChange: null })} />}
       {view.closeTabConfirm && (
         <CloseTabDialog tabId={view.closeTabConfirm} editors={editorsById} onClose={() => setViewState({ closeTabConfirm: null })} />
       )}

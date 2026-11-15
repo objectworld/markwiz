@@ -317,3 +317,19 @@
     box-shadow: none !important;
   }
 }
+
+/* 찾기/바꾸기: 일치 부분 표시(문서에는 영향 없는 데코레이션) */
+.ProseMirror .markwiz-search-match {
+  background: #f9e08a;
+  border-radius: 2px;
+}
+.ProseMirror .markwiz-search-current {
+  background: #f4a259;
+  outline: 1px solid #c9772a;
+}
+@media print {
+  .ProseMirror .markwiz-search-match {
+    background: none;
+    outline: none;
+  }
+}

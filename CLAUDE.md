@@ -44,6 +44,8 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
    | file.save | Ctrl+S | Cmd+S |
    | file.saveAs | Ctrl+Shift+S | Cmd+Shift+S |
    | file.print | Ctrl+P | Cmd+P |
+   | edit.find | Ctrl+F | Cmd+F |
+   | edit.replace | Ctrl+H | Cmd+Alt+F |
    | format.bold | Ctrl+B | Cmd+B |
    | format.italic | Ctrl+I | Cmd+I |
    | format.clearFormat | Ctrl+\ | Cmd+\ |
@@ -264,8 +266,8 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
 - 미연결: `!theme`, PlantUML 표준 라이브러리 번들, 다크 모드
 
 ## 진행 현황
-- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6), 다중 문서 탭 완료. 테스트는 Vitest(309개) + Rust `cargo test`(5개), `pnpm test`
-- 현재 버전 **0.1.4**(2026-11-12). 이전: 0.1.3(2026-10-29), 0.1.2(2026-09-23), 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
+- ①~⑦ 마일스톤 모두 완료, 이어서 리본 툴바 + 상태바(섹션 6), 다중 문서 탭 완료. 테스트는 Vitest(322개) + Rust `cargo test`(5개), `pnpm test`
+- 현재 버전 **0.1.5**(2026-11-15). 이전: 0.1.4(2026-11-12), 0.1.3(2026-10-29), 0.1.2(2026-09-23), 0.1.1(2026-09-23), 0.1.0(2026-09-20 첫 릴리즈). 버전은 `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` 세 곳을
   함께 올리고 README의 버전/릴리즈 노트/설치 파일명도 같이 갱신한다. 릴리즈는 `v0.1.0` 형식의 git 태그
 - 원격: `origin/main` (github.com/objectworld/markwiz)
 
@@ -333,10 +335,19 @@ Typora와 동등한 사용 경험을 제공하는 마크다운 WYSIWYG 에디터
   CSS는 `editor.css?raw`를 통째로 넣고(Tailwind `@apply` 없는 순수 CSS라야 한다), 쪽 모양(A4 794px, 안쪽 여백 72px, `@page` 0.75in)은 `PAGE_CSS`가 덧붙인다.
   복제본의 `<img>`와 원본의 `<img>`는 같은 순서라서 인덱스로 짝짓는다. 파일은 `PlatformAPI.saveBinaryFileAs`(웹: 다운로드, 데스크탑: 저장 대화상자)로 저장한다.
   PDF는 여전히 시스템 인쇄 대화상자의 "PDF로 저장"을 거치며 파일을 직접 만들지 않는다(README 한계 항목).
+- **찾기/바꾸기**(`edit.find` Ctrl+F, `edit.replace` Ctrl+H): 레지스트리 커맨드(`editCommands.ts`)는 `viewState.find`만 채우고 `FindDialog`가 문서 오른쪽 위에 뜬다(모달 아님, 인쇄 때는 숨음).
+  검색어/대소문자 옵션/일치 목록은 에디터마다 `extensions/search.ts`의 플러그인 상태가 들고, 일치 표시는 데코레이션이라 문서(마크다운)에 영향이 없다(HTML 내보내기에서는 클래스 제거).
+  일치는 한 문단 안에서만 찾는다. 바꾸기는 바꾼 글자 바로 뒤부터 다음 일치를 찾고(바꾼 글자가 검색어를 포함해도 무한 반복 안 함), 모두 바꾸기는 한 트랜잭션(실행 취소 1번).
+  소스 모드에서는 동작하지 않고 안내만 띄운다(textarea는 웹뷰 자체 찾기). 메뉴 항목은 `findActions`로 **편집 메뉴에만** 있고 리본에는 없다. `edit.*`는 `Editor.tsx` 전역 keydown 처리 대상에 포함된다.
+- **외부 파일 변경 감지**(데스크탑만): `PlatformAPI.fileMtime`/`OpenedDocument.mtime`(Tauri `stat`, 권한 `fs:allow-stat`). `externalChange.ts`가 경로별 "열거나 저장한 시점의 수정 시각"을 들고 있고
+  (열기/저장 직후 `rememberMtime`/`refreshMtime`으로 기록 — 저장을 변경으로 오인하지 않으려면 저장 뒤에 다시 기록해야 한다), 창이 포커스를 받을 때(`focus`/`visibilitychange`) 열린 탭마다 비교해
+  달라졌으면 `viewState.externalChange`(탭 id)로 `ExternalChangeDialog`를 띄운다. "다시 불러오기"는 그 탭을 활성화한 뒤 `reloadActiveFromDisk`(편집 중 내용은 버려지고 dirty 해제),
+  "현재 내용 유지"는 지금 수정 시각을 새 기준으로 삼아 같은 변경으로는 다시 묻지 않는다. 파일이 사라졌거나 시각을 못 읽으면 묻지 않는다. 웹은 `fileMtime`이 없어 동작하지 않는다.
+  Windows 네이티브 창의 실제 포커스 이벤트로는 검증하지 못했고(단위 테스트만), 브라우저에서는 이 기능이 꺼져 있다.
 
 ## 빌드 / 배포
 - 개발 `pnpm dev`, 웹 빌드 `pnpm build`, 데스크탑 `pnpm tauri build` (Tauri v2, Rust + MSVC Build Tools 필요 — 설치됨)
-- 산출물: `src-tauri/target/release/` 의 `markwiz.exe`, `bundle/nsis/*-setup.exe`, `bundle/msi/*.msi` (x64 전용)
+- 산출물: 기본 `src-tauri/target/release/`(오래된 기본 폴더는 0.1.5 때 삭제함 — 실행 중인 앱 때문에 `CARGO_TARGET_DIR=D:\dev\markwiz-build`로 빌드해 왔고 그 경우 `D:\dev\markwiz-buildelease\`) 의 `markwiz.exe`, `bundle/nsis/*-setup.exe`, `bundle/msi/*.msi` (x64 전용)
 - `markwiz.exe`가 실행 중이면 덮어쓰기가 실패한다. 사용자의 실행 중인 앱을 강제 종료하지 말고, 사용자가 닫게 하거나
   `CARGO_TARGET_DIR`을 다른 폴더로 지정해 빌드한다(전체 재컴파일 약 8분, 1.5GB)
 - 코드 서명은 하지 않는다(사용자가 보류 결정). 서명 시 SmartScreen 경고가 사라지지 않는 자체 서명은 의미가 적고,

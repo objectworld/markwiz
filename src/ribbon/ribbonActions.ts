@@ -20,6 +20,8 @@ import {
   Printer,
   Quote,
   Redo2,
+  Replace,
+  Search,
   RemoveFormatting,
   Save,
   SaveAll,
@@ -111,6 +113,12 @@ export const historyActions: RibbonAction[] = [
     run: (editor) => void editor.chain().focus().redo().run(),
     isDisabled: (editor) => !editor.can().redo(),
   },
+];
+
+// 편집 메뉴에만 있는 항목(리본에는 없음). 찾기/바꾸기 창은 Editor가 viewState.find로 그린다.
+export const findActions: RibbonAction[] = [
+  fromCommand('edit.find', 'action.edit.find', Search),
+  fromCommand('edit.replace', 'action.edit.replace', Replace),
 ];
 
 export const fontActions: RibbonAction[] = [

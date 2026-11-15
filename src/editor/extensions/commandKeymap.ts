@@ -4,6 +4,7 @@ import { getShortcutForPlatform, loadKeymap } from '../../commands/keymap';
 import { executeCommand } from '../../commands/registry';
 import { toProseMirrorShortcut } from '../../commands/shortcutFormat';
 import '../../commands/defaultCommands';
+import '../../commands/editCommands';
 import '../../commands/fileCommands';
 import '../../commands/viewCommands';
 

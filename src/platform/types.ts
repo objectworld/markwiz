@@ -3,6 +3,8 @@ export interface OpenedDocument {
   path: string | null;
   name: string;
   content: string;
+  // 파일의 마지막 수정 시각(ms). 디스크에서 바뀌었는지 비교하는 데 쓴다. 알 수 없으면 없음.
+  mtime?: number | null;
 }
 
 export interface SavedDocument {
@@ -34,6 +36,8 @@ export interface PlatformAPI {
   openFile(): Promise<OpenedDocument | null>;
   // 데스크탑: 실제 경로에 덮어쓰기. 웹: path를 파일명으로 써서 다운로드.
   saveFile(path: string, content: string): Promise<void>;
+  // 파일의 마지막 수정 시각(ms). 파일이 없거나 알 수 없으면 null. 경로를 아는 데스크탑에서만 구현한다.
+  fileMtime?(path: string): Promise<number | null>;
   saveFileAs(content: string, suggestedName: string): Promise<SavedDocument | null>;
   // Word 내보내기 등 텍스트가 아닌 파일을 저장한다. 사용자가 취소하면 null.
   // 데스크탑: 저장 대화상자 + 실제 파일 쓰기. 웹: 다운로드.

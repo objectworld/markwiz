@@ -10,6 +10,7 @@ import {
   diagramActions,
   exportActions,
   fileActions,
+  findActions,
   fontActions,
   historyActions,
   insertActions,
@@ -114,7 +115,7 @@ export function buildMenuModel(
         ...(showRecent ? [recentFilesSubmenu(recentFiles)] : []),
       ],
     },
-    { text: t('group.edit'), entries: entries(historyActions) },
+    { text: t('group.edit'), entries: [...entries(historyActions), { kind: 'separator' }, ...entries(findActions)] },
     {
       text: t('group.font'),
       entries: [

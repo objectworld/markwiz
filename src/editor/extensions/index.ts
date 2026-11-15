@@ -17,6 +17,7 @@ import { TaskItem } from './taskItem';
 import { FootnoteReference, FootnoteDefinition } from './footnote';
 import { FocusLineDecoration } from './focusLineDecoration';
 import { CurrentBlock } from './currentBlock';
+import { Search } from './search';
 import { CommandKeymap } from './commandKeymap';
 import { DocumentMeta } from './documentMeta';
 import { lowlight } from './lowlight';
@@ -76,5 +77,6 @@ export const editorExtensions = [
   FocusLineDecoration,
   CurrentBlock,
   CommandKeymap,
+  Search,
   DocumentMeta,
 ];

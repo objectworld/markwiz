@@ -10,7 +10,7 @@ A Typora-style WYSIWYG Markdown editor built on Tiptap (ProseMirror). It renders
 PlantUML diagrams entirely client-side, with no backend server required. Web and desktop (Tauri)
 share the same codebase.
 
-**Current version: 0.1.4** (2026-11-12). See the [release notes](#release-notes) for what changed.
+**Current version: 0.1.5** (2026-11-15). See the [release notes](#release-notes) for what changed.
 
 ![Markwiz screenshot](docs/images/screenshot.png)
 
@@ -47,10 +47,10 @@ You can install from a release build without building anything. No developer too
 
    | File | Description |
    |---|---|
-   | `Markwiz_0.1.4_x64-setup.exe` | Installer (recommended). Lets you pick Korean/English and installs WebView2 automatically if missing |
-   | `Markwiz_0.1.4_x64_en-US.msi` | MSI package (English) |
-   | `Markwiz_0.1.4_x64_ko-KR.msi` | MSI package (Korean) |
-   | `Markwiz_0.1.4_x64_portable.exe` | Standalone executable, no installation (requires the WebView2 runtime; no `.md` file association) |
+   | `Markwiz_0.1.5_x64-setup.exe` | Installer (recommended). Lets you pick Korean/English and installs WebView2 automatically if missing |
+   | `Markwiz_0.1.5_x64_en-US.msi` | MSI package (English) |
+   | `Markwiz_0.1.5_x64_ko-KR.msi` | MSI package (Korean) |
+   | `Markwiz_0.1.5_x64_portable.exe` | Standalone executable, no installation (requires the WebView2 runtime; no `.md` file association) |
 
 2. Run the downloaded file. The app isn't code-signed, so Windows SmartScreen may warn ("Windows protected your PC") —
    choose **More info → Run anyway**.
@@ -62,7 +62,7 @@ You can install from a release build without building anything. No developer too
 - **Requirements**: 64-bit (x64) Windows 10/11. The WebView2 runtime ships with Windows 11; the installer adds it if missing.
 - **Updating**: download the newer installer and install over the existing version (close Markwiz first).
 - **Uninstalling**: remove Markwiz from Windows **Settings > Apps > Installed apps**.
-- **Verifying the download (optional)**: compare `Get-FileHash .\Markwiz_0.1.4_x64-setup.exe` with the release's `SHA256SUMS.txt`.
+- **Verifying the download (optional)**: compare `Get-FileHash .\Markwiz_0.1.5_x64-setup.exe` with the release's `SHA256SUMS.txt`.
 
 Installers for macOS/Linux aren't provided yet.
 
@@ -143,9 +143,9 @@ Artifacts are written to `src-tauri/target/release/`.
 
 | File | Description |
 |---|---|
-| `bundle/nsis/Markwiz_0.1.4_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
-| `bundle/msi/Markwiz_0.1.4_x64_en-US.msi` | MSI package (English) |
-| `bundle/msi/Markwiz_0.1.4_x64_ko-KR.msi` | MSI package (Korean) |
+| `bundle/nsis/Markwiz_0.1.5_x64-setup.exe` | Installer (recommended; installs WebView2 automatically if missing) |
+| `bundle/msi/Markwiz_0.1.5_x64_en-US.msi` | MSI package (English) |
+| `bundle/msi/Markwiz_0.1.5_x64_ko-KR.msi` | MSI package (Korean) |
 | `markwiz.exe` | Standalone executable, no installation |
 
 - Running the exe alone (without an installer) requires the **WebView2 runtime** on the target PC.
@@ -274,6 +274,8 @@ The range is 50%–300%.
 | Save | `Ctrl+S` | Overwrites the open file, or falls back to "Save As" if none is open |
 | Save As | `Ctrl+Shift+S` | |
 | Print | `Ctrl+P` | The system print dialog (see "Printing and exporting" below) |
+| Find | `Ctrl+F` | Edit menu. Match-case option; Enter / Shift+Enter for next / previous |
+| Replace | `Ctrl+H` | Edit menu. Replace / Replace All (undone in one step) |
 
 - **Desktop app**: uses the OS's file open/save dialogs and writes to the real file. The same
   actions are also available from the top menu (File, etc.).
@@ -429,6 +431,12 @@ full list is in [`src/commands/keymap.json`](src/commands/keymap.json).
 - Only a light theme is supported.
 
 ## Release notes
+
+### 0.1.5 (2026-11-15)
+
+- **Find / Replace**: **Find** (`Ctrl+F`) and **Replace** (`Ctrl+H`) in the Edit menu. Matches are highlighted in the document, with a **Match case** option, previous/next (Enter / Shift+Enter), Replace, and Replace All (undone in one step)
+- **External change prompt**: when a file you have open is changed by another program, returning to the window shows a **dialog asking whether to reload it** (desktop). If you have unsaved changes it warns that they would be lost
+- Printing now outputs only the document body, without a header or footer
 
 ### 0.1.4 (2026-11-12)
 

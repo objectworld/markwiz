@@ -13,7 +13,7 @@ const REMOVE_SELECTOR = [
 ].join(',');
 
 const STRIP_ATTRIBUTES = ['contenteditable', 'draggable', 'spellcheck', 'translate', 'data-placeholder', 'tabindex'];
-const STRIP_CLASSES = new Set(['tiptap', 'is-editor-empty', 'markwiz-current-block', 'markwiz-diagram-enlargeable']);
+const STRIP_CLASSES = new Set(['tiptap', 'is-editor-empty', 'markwiz-current-block', 'markwiz-diagram-enlargeable', 'markwiz-search-match', 'markwiz-search-current']);
 const IMAGE_SELECTOR = 'img:not(.ProseMirror-separator)';
 
 export interface CleanOptions {

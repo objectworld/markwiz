@@ -30,6 +30,10 @@ export interface ViewState {
   // 바뀐 내용이 있는 탭을 닫으려 할 때 "저장 후 닫기/저장 없이 닫기/취소"를 물어보는 창.
   // 탭 id가 있으면 그 탭에 대해 묻는 중이라는 뜻.
   closeTabConfirm: string | null;
+  // 찾기/바꾸기 창. null이면 닫힘, replace가 true면 바꾸기 입력까지 보인다. token은 이미 열려 있을 때도 입력에 다시 포커스를 주기 위한 값.
+  find: { replace: boolean; token: number } | null;
+  // 디스크에서 바뀐 파일을 다시 불러올지 묻는 창(대상 탭 id).
+  externalChange: string | null;
 }
 
 export const SIDEBAR_DEFAULT_WIDTH = 256;
@@ -74,6 +78,8 @@ const initialState: ViewState = {
   notice: '',
   sourceText: '',
   closeTabConfirm: null,
+  find: null,
+  externalChange: null,
 };
 
 export const MIN_ZOOM = 0.5;

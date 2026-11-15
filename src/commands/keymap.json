@@ -5,6 +5,9 @@
   "file.saveAs": { "win": "Ctrl+Shift+S", "mac": "Cmd+Shift+S" },
   "file.print": { "win": "Ctrl+P", "mac": "Cmd+P" },
 
+  "edit.find": { "win": "Ctrl+F", "mac": "Cmd+F" },
+  "edit.replace": { "win": "Ctrl+H", "mac": "Cmd+Alt+F" },
+
   "format.bold": { "win": "Ctrl+B", "mac": "Cmd+B" },
   "format.italic": { "win": "Ctrl+I", "mac": "Cmd+I" },
   "format.strike": { "win": "Alt+Shift+5", "mac": "Control+Shift+`" },

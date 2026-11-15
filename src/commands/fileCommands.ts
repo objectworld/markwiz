@@ -5,6 +5,7 @@ import { basename, type OpenedDocument, type PlatformAPI } from '../platform/typ
 import { printDocument } from '../export/exportPdf';
 import { t } from '../i18n/i18n';
 import { getDocumentState, setDocumentState } from './documentState';
+import { refreshMtime, rememberMtime } from './externalChange';
 import { addRecentFile, removeRecentFile } from './recentFiles';
 import { registerCommand } from './registry';
 import { findTabByPath, getActiveTab, openTab, patchTab, setActiveTabId } from './tabsState';
@@ -45,6 +46,7 @@ registerCommand('file.new', () => {
 // 그 외에는 새 탭을 연다. editor는 "지금 활성 탭의 에디터"이고, 재사용/신규 탭 중
 // 재사용 경로에서만 쓰인다(신규 탭의 에디터는 아직 만들어지지 않았기 때문).
 function loadIntoTabs(editor: Editor, opened: OpenedDocument): void {
+  rememberMtime(opened.path, opened.mtime);
   if (opened.path !== null) {
     const existing = findTabByPath(opened.path);
     if (existing) {
@@ -99,6 +101,25 @@ export async function openRecentFile(editor: Editor, path: string): Promise<bool
   return true;
 }
 
+// 디스크에서 바뀐 파일을 지금 활성 탭에 다시 불러온다(편집 중이던 내용은 버려진다).
+// 실패하면(파일이 없어졌거나 읽을 수 없으면) 탭은 그대로 두고 false.
+export async function reloadActiveFromDisk(editor: Editor): Promise<boolean> {
+  const platform = await getPlatform();
+  const path = getDocumentState().path;
+  if (!platform.openFileAt || !path) return false;
+  let opened: OpenedDocument;
+  try {
+    opened = await platform.openFileAt(path);
+  } catch (error) {
+    console.error(`[markwiz] failed to reload: ${path}`, error);
+    return false;
+  }
+  showDocument(editor, opened);
+  rememberMtime(opened.path, opened.mtime);
+  patchTab(getActiveTab().id, { dirty: false });
+  return true;
+}
+
 // file.save의 실제 동작. 탭을 닫기 전 저장 확인 창(CloseTabDialog)도 이 함수를 그대로 쓴다 —
 // 두 곳 모두 "경로가 없으면 다른 이름으로 저장 대화상자, 취소하면 실패"라는 같은 규칙을
 // 따라야 하기 때문이다. 항상 지금 활성 탭을 대상으로 한다(호출 전에 그 탭을 활성화해 둘 것).
@@ -114,10 +135,12 @@ export async function saveActiveDocument(editor: Editor): Promise<boolean> {
     if (!saved) return false;
     setDocumentState(saved);
     rememberFile(platform, saved.path);
+    await refreshMtime(platform, saved.path);
     return true;
   }
 
   await platform.saveFile(current.path, markdown);
+  await refreshMtime(platform, current.path);
   patchTab(activeId, { dirty: false });
   return true;
 }
@@ -132,5 +155,6 @@ registerCommand('file.saveAs', async (editor) => {
   if (saved) {
     setDocumentState(saved);
     rememberFile(platform, saved.path);
+    await refreshMtime(platform, saved.path);
   }
 });

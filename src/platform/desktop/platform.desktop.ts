@@ -1,5 +1,5 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
-import { readTextFile, writeFile, writeTextFile } from '@tauri-apps/plugin-fs';
+import { readTextFile, stat, writeFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { pathToFileUrl } from '../localFile';
 import {
   basename,
@@ -15,6 +15,16 @@ const MARKDOWN_FILTER = { name: 'Markdown', extensions: ['md', 'markdown'] };
 
 const IMAGE_FILTER = { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'avif'] };
 
+// 수정 시각을 못 읽으면(파일 없음 등) null.
+async function mtimeOf(path: string): Promise<number | null> {
+  try {
+    const info = await stat(path);
+    return info.mtime ? info.mtime.getTime() : null;
+  } catch {
+    return null;
+  }
+}
+
 export const desktopPlatform: PlatformAPI = {
   localFileKinds: ['image', 'any'],
 
@@ -29,12 +39,16 @@ export const desktopPlatform: PlatformAPI = {
     if (!selected || Array.isArray(selected)) return null;
 
     const content = await readTextFile(selected);
-    return { path: selected, name: basename(selected), content };
+    return { path: selected, name: basename(selected), content, mtime: await mtimeOf(selected) };
   },
 
   async openFileAt(path: string): Promise<OpenedDocument> {
     const content = await readTextFile(path);
-    return { path, name: basename(path), content };
+    return { path, name: basename(path), content, mtime: await mtimeOf(path) };
+  },
+
+  async fileMtime(path: string): Promise<number | null> {
+    return mtimeOf(path);
   },
 
   async saveFile(path: string, content: string): Promise<void> {

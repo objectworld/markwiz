@@ -4,6 +4,8 @@ export const COMMAND_IDS = [
   'file.save',
   'file.saveAs',
   'file.print',
+  'edit.find',
+  'edit.replace',
   'format.bold',
   'format.italic',
   'format.strike',
